@@ -211,14 +211,16 @@ const ease=x=>x<.5?2*x*x:1-Math.pow(-2*x+2,2)/2;
 function phase(now,d){const p=(now/1000/d)%2,q=p<1?p:2-p;return ease(clamp((q-.08)/.84,0,1))}
 const FIGREG={},LIVE=[];let FSEQ=0;
 const INK="#141414",FAR="#a9a89f",ORG="#ff4d00",RED="#d6302a";
-const SEGS=[["S","E2",FAR,4.5],["E2","W2",FAR,4.5],["P","K2",FAR,5.5],["K2","A2",FAR,5],["L2","T2",FAR,3.5],["P","S",INK,7],["P","K1",INK,5.5],["K1","A1",INK,5],["L1","T1",INK,3.5],["S","E1",INK,4.5],["E1","W1",INK,4.5]];
+const NB="#1f1f1d",FB="#a3a299",NH="#77766f",FH="#e2e1d9";
+const SEGS=[["S","E2",FB,6.5,"E2"],["E2","W2",FB,5.5,"W2"],["P","K2",FB,8.5,"K2"],["K2","A2",FB,7,"A2"],["L2","T2",FB,4,""],["P","S",NB,12,""],["P","K1",NB,8.5,"K1"],["K1","A1",NB,7,"A1"],["L1","T1",NB,4,""],["S","E1",NB,6.5,"E1"],["E1","W1",NB,5.5,"W1"]];
 const MARK=["S","P","K1","A1","E1"];
 function fig(v){if(!v)return "";const id="fg"+(FSEQ++);FIGREG[id]=normFig(v);return `<svg id="${id}" class="fsv" viewBox="0 -20 200 192" xmlns="http://www.w3.org/2000/svg" role="img"></svg>`}
 function figMount(){
  LIVE.length=0;
  for(const id in FIGREG){const el=document.getElementById(id);if(!el){delete FIGREG[id];continue}
   const n=FIGREG[id],c=n.c,ns="http://www.w3.org/2000/svg";let h="";
-  if(!n.nf)h+=`<line x1="0" y1="151" x2="200" y2="151" stroke="${INK}" stroke-width="1.5"/><path d="${Array.from({length:21},(_,i)=>`M${i*10+6} 151 l-6 7`).join(" ")}" stroke="${FAR}" stroke-width="1"/>`;
+  h+=`<defs><radialGradient id="hg${id}" cx="35%" cy="32%" r="75%"><stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#d4d3cb"/><stop offset="1" stop-color="#5f5e57"/></radialGradient><radialGradient id="pg${id}" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#ff9a66"/><stop offset=".5" stop-color="#ff4d00"/><stop offset="1" stop-color="#9c2f00"/></radialGradient><linearGradient id="fl${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e6e5dd"/><stop offset="1" stop-color="#cfcec5"/></linearGradient></defs>`;
+  if(!n.nf){h+=`<polygon points="0,151 200,151 200,170 0,170" fill="url(#fl${id})"/><line x1="0" y1="151" x2="200" y2="151" stroke="${INK}" stroke-width="1.5"/><path d="${Array.from({length:11},(_,i)=>`M${i*20} 151 L${(i*20-100)*1.25+100} 170`).join(" ")}" stroke="#bdbcb3" stroke-width=".8"/>`;h+=`<ellipse data-sh="1" cx="100" cy="153" rx="30" ry="3.5" fill="#000" opacity=".16"/>`}
   (c.ax?[].concat(c.ax):[]).forEach(x=>{h+=`<line x1="${x}" y1="-14" x2="${x}" y2="151" stroke="${INK}" stroke-width="1" stroke-dasharray="3 3" opacity=".55"/>`});
   if(c.ax)h+=`<text x="${[].concat(c.ax)[0]+3}" y="168" font-family="JetBrains Mono,monospace" font-size="7.5" fill="${INK}" opacity=".7">${esc(c.axl||"OŚ RUCHU")}</text>`;
   (c.gh||[]).forEach(g=>{h+=`<line x1="${g[0]}" y1="${g[1]}" x2="${g[2]}" y2="${g[3]}" stroke="${RED}" stroke-width="3" stroke-dasharray="4 3" stroke-linecap="round" opacity=".7"/>`});
@@ -229,19 +231,19 @@ function figMount(){
    else if(k==="bar")h+=`<line x1="${p[1]}" y1="${p[3]}" x2="${p[2]}" y2="${p[3]}" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/>`;
    else if(k==="circ")h+=`<circle cx="${p[1]}" cy="${p[2]}" r="${p[3]}" fill="none" stroke="#8b8a82" stroke-width="3.5"/>`});
   if(c.tr){const pts=[];for(let i=0;i<=40;i++){const q=frameAt(n,i/40)[c.tr];pts.push(q[0].toFixed(1)+","+q[1].toFixed(1))}h+=`<polyline points="${pts.join(" ")}" fill="none" stroke="${ORG}" stroke-width="1.5" stroke-dasharray="2 3"/>`}
-  SEGS.forEach((s,i)=>h+=`<line data-i="${i}" stroke="${s[2]}" stroke-width="${s[3]}" stroke-linecap="round"/>`);
-  h+=`<circle data-h="1" r="8.5" fill="#fff" stroke="${INK}" stroke-width="3.5"/>`;
+  SEGS.forEach((s,i)=>{const hi=s[2]===NB?NH:FH;h+=`<line data-i="${i}" stroke="${s[2]}" stroke-width="${s[3]}" stroke-linecap="round"/><line data-hi="${i}" stroke="${hi}" stroke-width="${(s[3]*.3).toFixed(1)}" stroke-linecap="round" opacity=".75"/>`;if(s[4])h+=`<circle data-jn="${s[4]}" r="${(s[3]/2+.6).toFixed(1)}" fill="${s[2]}"/>`});
+  h+=`<circle data-h="1" r="9.5" fill="url(#hg${id})" stroke="${INK}" stroke-width="1.6"/>`;
   MARK.forEach(m=>h+=`<circle data-m="${m}" r="2.2" fill="#fff" stroke="${ORG}" stroke-width="1.3"/>`);
   n.pr.forEach((p,i)=>{const k=p[0];
-   if(k==="bb")h+=`<circle data-p="${i}" r="${p[2]||16}" fill="none" stroke="${ORG}" stroke-width="3.5"/><circle data-pc="${i}" r="2.5" fill="${ORG}"/>`;
-   else if(k==="db")h+=`<circle data-p="${i}" r="5.5" fill="${ORG}"/>`;
-   else if(k==="bag")h+=`<circle data-p="${i}" r="9" fill="${ORG}" opacity=".85"/>`;
+   if(k==="bb"){const r=p[2]||16;h+=`<ellipse data-pf="${i}" rx="${(r*.38).toFixed(1)}" ry="${r}" fill="#9c2f00" stroke="${INK}" stroke-width="1"/><line data-pb="${i}" stroke="#55544e" stroke-width="2.6" stroke-linecap="round"/><ellipse data-p="${i}" rx="${(r*.38).toFixed(1)}" ry="${r}" fill="url(#pg${id})" stroke="${INK}" stroke-width="1"/><circle data-pc="${i}" r="1.8" fill="#fff"/>`}
+   else if(k==="db")h+=`<circle data-p="${i}" r="6" fill="url(#pg${id})" stroke="${INK}" stroke-width=".8"/>`;
+   else if(k==="bag")h+=`<circle data-p="${i}" r="9.5" fill="url(#pg${id})" stroke="${INK}" stroke-width=".8"/>`;
    else if(k==="pad")h+=`<circle data-p="${i}" r="4.5" fill="${ORG}"/>`;
    else if(k==="ball")h+=`<circle data-p="${i}" r="5" fill="none" stroke="${ORG}" stroke-width="2.5"/>`;
    else if(k==="cable"||k==="bbar")h+=`<line data-p="${i}" stroke="${ORG}" stroke-width="${k==="bbar"?3.5:1.6}" stroke-linecap="round"/>`});
   if(n.lab)h+=`<text x="196" y="-8" text-anchor="end" font-family="JetBrains Mono,monospace" font-size="7.5" fill="${ORG}">${esc(n.lab)}</text>`;
   el.innerHTML=h;
-  LIVE.push({n,el,segs:[...el.querySelectorAll("[data-i]")],head:el.querySelector("[data-h]"),marks:[...el.querySelectorAll("[data-m]")],props:n.pr.map((p,i)=>[p,el.querySelector(`[data-p="${i}"]`),el.querySelector(`[data-pc="${i}"]`)])});
+  LIVE.push({n,el,pfs:n.pr.map((p,i)=>[el.querySelector(`[data-pf="${i}"]`),el.querySelector(`[data-pb="${i}"]`)]),his:[...el.querySelectorAll("[data-hi]")],jns:[...el.querySelectorAll("[data-jn]")],sh:el.querySelector("[data-sh]"),segs:[...el.querySelectorAll("[data-i]")],head:el.querySelector("[data-h]"),marks:[...el.querySelectorAll("[data-m]")],props:n.pr.map((p,i)=>[p,el.querySelector(`[data-p="${i}"]`),el.querySelector(`[data-pc="${i}"]`)])});
  }
  for(const id in FIGREG)delete FIGREG[id];
 }
@@ -249,12 +251,16 @@ const sa=(e,o)=>{for(const k in o)e.setAttribute(k,o[k].toFixed?o[k].toFixed(1):
 function drawFig(L,now){
  const J=frameAt(L.n,phase(now,L.n.d));
  L.segs.forEach((e,i)=>{const s=SEGS[i],a=J[s[0]],b=J[s[1]];if(!a||!b){e.setAttribute("opacity",0);return}sa(e,{x1:a[0],y1:a[1],x2:b[0],y2:b[1]})});
+ L.his.forEach((e,i)=>{const s=SEGS[i],a=J[s[0]],b=J[s[1]];if(!a||!b)return;const o=s[3]*.17;sa(e,{x1:a[0]-o,y1:a[1]-o,x2:b[0]-o,y2:b[1]-o})});
+ L.jns.forEach(e=>{const q=J[e.dataset.jn];if(q)sa(e,{cx:q[0],cy:q[1]})});
+ if(L.sh)sa(L.sh,{cx:J.P[0]});
  sa(L.head,{cx:J.H[0],cy:J.H[1]});
  L.marks.forEach(m=>{const q=J[m.dataset.m];if(q)sa(m,{cx:q[0],cy:q[1]})});
  L.props.forEach(([p,e,ec])=>{if(!e)return;const k=p[0];
   if(k==="cable"){const a=typeof p[1]==="number"?[p[1],p[2]]:J[p[1]],b=J[typeof p[1]==="number"?p[3]:p[2]];sa(e,{x1:a[0],y1:a[1],x2:b[0],y2:b[1]})}
   else if(k==="bbar"){const a=J[p[1]],b=J[p[2]];sa(e,{x1:a[0]-6,y1:a[1],x2:b[0]+6,y2:b[1]})}
-  else{const q=J[p[1]],dx=p[3]||0,dy=k==="ball"?9:(p[4]||0);sa(e,{cx:q[0]+dx,cy:q[1]+dy});if(ec)sa(ec,{cx:q[0]+dx,cy:q[1]+dy})}});
+  else{const q=J[p[1]],dx=p[3]||0,dy=k==="ball"?9:(p[4]||0),x=q[0]+dx,y=q[1]+dy;sa(e,{cx:x,cy:y});if(ec)sa(ec,{cx:x,cy:y});
+   if(k==="bb"){const pi=L.n.pr.indexOf(p),[pf,pb]=L.pfs[pi];if(pf)sa(pf,{cx:x+9,cy:y-6});if(pb)sa(pb,{x1:x+12,y1:y-8,x2:x-4,y2:y+2.5})}}});
 }
 function figLoop(now){if(!document.hidden)for(const L of LIVE)if(L.el.isConnected)drawFig(L,now);requestAnimationFrame(figLoop)}
 requestAnimationFrame(figLoop);
@@ -663,7 +669,7 @@ function applyProfile(id){PID=id;PC=PROF[id];
 /* ================= daty i fazy ================= */
 const st={tab:"today",off:0,wk:null,dd:null,dv:"plan",open:{},mob:"hip",shopN:3,shopFrom:0};
 function curDate(){const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()+st.off);return d}
-function wkInfo(d){const s0=new Date(S.get("start","2026-11-02")+"T12:00:00");const raw=Math.floor((d-s0)/(864e5*7))+1;const w=Math.max(1,Math.min(PC.weeks,raw));return{w,raw,ph:w<=PC.phb[0]?1:w<=PC.phb[1]?2:3,deload:raw>=1&&w%4===0}}
+function wkInfo(d){const s0=new Date(S.get("start","2026-11-02")+"T12:00:00");const raw=Math.floor((d-s0)/(864e5*7))+1;const w=Math.max(1,Math.min(PC.weeks,raw));return{w,raw,ph:w<=PC.phb[0]?1:w<=PC.phb[1]?2:3,deload:raw>=1&&w%4===0,test:w%4===1}}
 let PHN=["","Faza 1: baza","Faza 2: siła","Faza 3: moc i góry"];
 let PHNOTE=["","RIR 2-3 (zapas powtórzeń). Przysiad w tygodniach 1-4 jako goblet. Martwy ciąg: technika, start od 60 kg.","RIR 1-2. Gdy zrobisz górną granicę powtórzeń we wszystkich seriach, dokładasz 2,5 kg (góra) lub 5 kg (nogi).","Skoki 5 × 4, wyższa skrzynia przy wejściach. W treningach B i D odejmij po 1 serii z każdego ćwiczenia: nogi i marsze mają pierwszeństwo."];
 
@@ -702,6 +708,7 @@ function todayItemsK(d){
  items.push({t:"cały dzień",id:"steps",n:"8 tys. kroków",s:"Spacer, schody, rower"});
  items.push({t:"cały dzień",id:"water",n:PC.water,s:"Zielona herbata lub napar z imbiru się liczą"});
  items.push({t:"23:00",id:"sleep",n:"Sen 7-8 h",s:"Regeneracja i hormony głodu"});
+ if(wkInfo(d).test&&WK[key])items.push({t:"trening",id:"rmtest",n:"Test ciężaru w ćwiczeniach z obciążeniem",s:"Tydzień testów",go:"train:"+key});
  items.sort((a,b)=>tmin(a.t)-tmin(b.t));return items;
 }
 function todayItems(d){if(PID==="k")return todayItemsK(d);
@@ -719,6 +726,7 @@ function todayItems(d){if(PID==="k")return todayItemsK(d);
  items.push({t:"cały dzień",id:"water",n:PC.water,s:"Dodatkowo elektrolity przy dużym wysiłku"});
  items.push({t:"21:30",id:"mag",n:"Magnez 300 mg",s:"Wieczorem z wodą"});
  items.push({t:"22:30",id:"sleep",n:"Światło zgaszone",s:"7-8 h snu przy pobudce o 5:40"});
+ if(wkInfo(d).test&&WK[key])items.push({t:"trening",id:"rmtest",n:"Test ciężaru w ćwiczeniach z obciążeniem",s:"Tydzień testów: w pierwszej serii roboczej każdego ćwiczenia",go:"train:"+key});
  items.sort((a,b)=>tmin(a.t)-tmin(b.t));
  return items;
 }
@@ -729,7 +737,7 @@ function vToday(){
  let h=(!S.get("hideInst",false)?installCard(false):"");
  h+=`<div class="card"><div class="row" style="justify-content:space-between"><div><div class="lab">${DN[d.getDay()]}, ${d.toLocaleDateString("pl-PL",{day:"numeric",month:"long"})}</div>
  <h2 style="margin-top:2px">Tydzień ${wi.w} z ${PC.weeks}</h2></div><div class="dnav"><button data-a="off:-1" aria-label="Poprzedni dzień">‹</button><button data-a="off:0" style="width:auto;padding:0 10px;font-size:12.5px">dziś</button><button data-a="off:1" aria-label="Następny dzień">›</button></div></div>
- <div style="margin-top:6px"><span class="pill acc">${PHN[wi.ph]}</span>${wi.deload?'<span class="pill warn">Tydzień odciążenia: serie −40%</span>':""}${wi.raw<1?'<span class="pill">Start planu: '+esc(S.get("start","2026-11-02"))+"</span>":""}<span class="pill">${ROT[d.getDay()].kcal} kcal</span></div>
+ <div style="margin-top:6px"><span class="pill acc">${PHN[wi.ph]}</span>${wi.deload?'<span class="pill warn">Tydzień odciążenia: serie −40%</span>':""}${wi.test&&wi.raw>=1?'<span class="pill warn">Tydzień testów ciężaru</span>':""}${wi.raw<1?'<span class="pill">Start planu: '+esc(S.get("start","2026-11-02"))+"</span>":""}<span class="pill">${ROT[d.getDay()].kcal} kcal</span></div>
  <div class="bar"><i style="width:${pct}%"></i></div><div class="small mut" style="margin-top:5px">${done} z ${items.length} punktów (${pct}%)</div></div><div class="card">`;
  items.forEach(i=>{h+=`<div class="item"><div class="time">${esc(i.t)}</div><button class="ck ${isOn(ds,i.id)?"on":""}" data-a="ck:${i.id}" aria-label="Odhacz"></button><div class="itx"><b>${esc(i.n)}</b><div class="small mut">${esc(i.s)}</div></div>${i.go?`<button class="go" data-a="go:${i.go}">Otwórz</button>`:""}</div>`});
  h+="</div>";
@@ -737,6 +745,20 @@ function vToday(){
  return h;
 }
 
+/* ================= test ciężaru ================= */
+const LOAD={dl:["bb",[60,80],[30,40]],sq:["bb",[40,60],[20,30]],bss:["db",[10,16],[4,6]],lc:["mc",[25,40],[15,20]],cr:["bb",[40,60],[20,30]],bp:["bb",[40,60],[15,20]],idb:["db",[14,20],[6,10]],ohp:["db",[12,18],[4,6]],lr:["db",[6,8],[2,3]],tpd:["mc",[20,30],[10,15]],fr:["db",[12,18],[4,6]],fp:["mc",[15,25],[8,12]],rdl:["bb",[40,60],[20,30]],su:["db",[8,14],[4,6]],ll:["db",[8,14],[4,6]],ht:["bb",[40,60],[30,40]],le:["mc",[30,45],[15,25]],scr:["mc",[30,50],[15,25]],fw:["db",[20,28],[8,12]],bor:["bb",[40,50],[20,25]],cr2:["mc",[35,50],[20,30]],rf:["mc",[15,25],[8,12]],bc:["bb",[20,30],[10,15]],hc:["db",[10,14],[4,6]],gs:["db",[16,24],[8,12]],kbs:["db",[16,24],[8,12]],wl:["db",[8,12],[4,6]],dbrow:["db",[18,26],[6,10]],latpd:["mc",[40,55],[20,30]]};
+const LUN={bb:"kg na sztandze (z gryfem)",db:"kg na hantlę",mc:"kg na maszynie"};
+const RIRS={m:[3,2,1.5],k:[3,2,2]};
+function repRange(dose){const m=/(\d+)\s*-\s*(\d+)(?!\s*s)/.exec(dose.replace(/×/g," "));if(/rund/.test(dose))return[12,15];if(m)return[+m[1],+m[2]];const x=/×\s*(\d+)(?!\s*(s|m)\b)/.exec(dose);return x?[+x[1],+x[1]]:[10,12]}
+function roundLoad(w,t){const st=t==="db"?(w<=10?1:2):2.5;return Math.max(st,Math.round(w/st)*st)}
+function workLoad(id,dose){const t=S.get("rm",{})[id];if(!t||!LOAD[id])return null;const e1=t.w*(1+(t.r+1)/30),[lo]=repRange(dose),rir=RIRS[PID][wkInfo(curDate()).ph-1];return{w:roundLoad(e1/(1+(lo+rir)/30),LOAD[id][0]),e1,t,rir}}
+const kgf=v=>String(Math.round(v*10)/10).replace(".",",");
+function loadBlock(id,dose,key){const L=LOAD[id];if(!L)return "";const r=workLoad(id,dose),tk="ts_"+key+"_"+id,open=st.open[tk],sg=L[PID==="k"?2:1];
+ let h=`<div class="small" style="margin:8px 0 0 38px">${r&&wkInfo(curDate()).test&&r.t.d<iso(new Date(Date.now()-14*864e5))?`<div style="color:var(--acc);font-weight:600">Tydzień testów: powtórz test</div>`:""}${r?`<b style="font-family:var(--mono)">Ciężar roboczy: ${kgf(r.w)} ${LUN[L[0]]}</b><div class="mut">z testu ${kgf(r.t.w)} kg × ${r.t.r} (${fd(r.t.d)}), zapas ${String(r.rir).replace(".",",")} powt.</div>`:`<b style="color:var(--acc)">Ciężar nieustalony: zrób test</b><div class="mut">Ciężar do testu na start: ok. ${sg[0]}-${sg[1]} ${LUN[L[0]]}</div>`}<button class="tbtn" data-a="op:${tk}" style="margin-top:6px">${open?"Zamknij test":(r?"Powtórz test":"Test ciężaru")}</button></div>`;
+ if(open)h+=`<div class="det"><div class="alt" style="border-left-color:var(--acc)"><b>Test submaksymalny, bezpieczny</b><ol style="margin:6px 0;padding-left:18px">${(id==="dl"||id==="sq")&&wkInfo(curDate()).w<=2?"<li>Pierwsze 2 tygodnie ucz się techniki lekkim ciężarem, test zrób w 3. tygodniu.</li>":""}<li>Rozgrzewka 10 min, potem 2-3 serie rozgrzewkowe: ok. 40%, 60% i 80% ciężaru testowego po 8, 5 i 3 powtórzenia.</li><li>Seria testowa: ciężar, który zrobisz 5-10 razy w czystej technice. Kończysz, gdy zostaną 1-2 powtórzenia zapasu albo technika zacznie się psuć. Nigdy do upadku i bez prób na 1 powtórzenie.</li><li>Wynik powyżej 12 powtórzeń: w następnym treningu dołóż ciężaru i powtórz test.</li><li>Test robisz raz w miesiącu: w tygodniu testów (1., 5., 9. tydzień planu itd.), czyli zaraz po tygodniu odciążenia. Aplikacja przypomni o nim na ekranie Dziś.</li></ol>
+ <div class="row" style="margin-top:8px"><input id="rmw_${id}" inputmode="decimal" placeholder="ciężar kg" value="${r?kgf(r.t.w):""}"><input id="rmr_${id}" inputmode="numeric" placeholder="powtórzenia" value="${r?r.t.r:""}" style="max-width:120px"><button class="btn" data-a="rmsave:${id}">Zapisz</button></div>
+ <p class="small mut" style="margin:6px 0 0">Wyliczenie: szacowany ciężar maksymalny wzorem Epleya, potem ciężar na dolną granicę powtórzeń (${repRange(dose).join("-")}) z zapasem właściwym dla Twojej fazy.</p></div></div>`;
+ return h}
 /* ================= widok: Trening ================= */
 function exCard(key,idx,row,ds,mode){
  const [id,dose,rest]=row,e=EX[id],alt=mode==="home"&&e.h;
@@ -748,7 +770,7 @@ function exCard(key,idx,row,ds,mode){
  let h=`<div class="ex"><div class="exh"><div class="num">${idx+1}</div><div class="exn"><b>${esc(nm)}${en?` <i class="mut" style="font-weight:400">(${esc(en)})</i>`:""}</b><span class="small mut">${esc(dose)} · przerwa ${esc(rest)}</span>${hold?`<div style="margin-top:6px"><button class="tbtn" data-a="tm:${hold}:${esc(nm)}">Minutnik ${hold} s</button></div>`:""}</div><div class="figw" data-a="op:${ok}">${fig(vis)}</div></div>
  <div class="dots">`;
  for(let s=1;s<=sets;s++)h+=`<button class="dot ${s<=doneSets?"on":""}" data-a="set:${sid}:${s}">${s}</button>`;
- h+=`</div><div class="wt"><input data-w="${wkey}" value="${esc(wv)}" placeholder="ciężar × powt., np. 80 × 5"></div>`;
+ h+=`</div>${mode==="home"&&e.h?"":loadBlock(id,dose,key)}<div class="wt"><input data-w="${wkey}" value="${esc(wv)}" placeholder="ciężar × powt., np. 80 × 5"></div>`;
  h+=`<button class="more" data-a="op:${ok}">${open?"Zwiń opis":"Jak wykonać"}</button>`;
  if(open){
   h+=`<div class="det"><div class="figbig">${fig(vis)}</div>${!alt&&e.fv?`<div class="figbig">${fig(e.fv)}</div>`:""}${e.x?`<div class="warnl"><b>Tego unikaj: ryzyko kontuzji</b><ul>${e.x.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`:""}`;
@@ -903,12 +925,14 @@ function vProg(){
  h+=`</div>`;
  CP.forEach(gr=>{h+=`<div class="card"><h2>${gr.g}</h2>`;gr.it.forEach(([id,n])=>{let on=!!cp[id];const mk=/^k(\d+)/.exec(id);if(mk&&last!==null&&last<=+mk[1])on=true;
   h+=`<div class="item"><button class="ck ${on?"on":""}" data-a="cp:${id}"></button><div class="itx">${esc(n)}</div></div>`});h+="</div>"});
+ const rm=S.get("rm",{}),rk=Object.keys(rm).filter(x=>LOAD[x]);
+ h+=`<div class="card"><h2>Ciężary robocze</h2>${rk.length?`<table class="lg">${rk.map(x=>{const t=rm[x],e1=t.w*(1+(t.r+1)/30);return `<tr><td>${esc(EX[x].n)}</td><td style="text-align:right">${kgf(t.w)}×${t.r}</td><td style="text-align:right">~${kgf(Math.round(e1))} max</td></tr>`}).join("")}</table><p class="small mut">Ciężar roboczy na dany trening wylicza się w karcie ćwiczenia, zależnie od zakresu powtórzeń i fazy.</p>`:`<p class="small mut">Brak testów. Test zrobisz przyciskiem „Test ciężaru” w karcie każdego ćwiczenia z obciążeniem.</p>`}</div>`;
  h+=`<div class="card"><h2>Testy co 12 tygodni</h2><p class="small mut">Ten sam dzień tygodnia, wypoczęty.</p><table class="lg"><tr><td></td>${PC.tests.map(x=>`<td class="small mut">${x}</td>`).join("")}</tr>`;
  [1,12,24,36].forEach(w=>{const t=tests[w]||{};h+=`<tr><td class="small">Tydz. ${w}</td>${["run","pull","waist","kg"].map(f=>`<td><input data-t="${w}:${f}" value="${esc(t[f]||"")}" style="padding:6px;font-size:14px"></td>`).join("")}</tr>`});
  h+=`</table></div><div class="card"><h2>Ustawienia</h2><label class="small mut">Data startu planu (poniedziałek tygodnia 1)</label><input type="date" id="sd" value="${esc(S.get("start","2026-11-02"))}" style="margin:6px 0 12px">
  <div class="small mut">Dane zapisują się w tej aplikacji na tym telefonie. Kopia zapasowa: skopiuj tekst i zachowaj w notatkach, przywrócisz go wklejając poniżej.</div>
  <div class="row" style="margin-top:8px"><button class="btn2" data-a="exp">Kopiuj dane</button><button class="btn2" data-a="imp">Wczytaj z pola</button></div><textarea id="bk" rows="3" style="margin-top:8px" placeholder="tu pojawi się lub wklejasz kopię"></textarea><div id="bkm" class="small mut"></div>
- <div class="small mut" style="margin-top:10px">Wersja 1.6 · protokół ${PC.code} · profil: ${PC.name}</div></div>`;
+ <div class="small mut" style="margin-top:10px">Wersja 1.7 · protokół ${PC.code} · profil: ${PC.name}</div></div>`;
  return h;
 }
 function chart(log){
@@ -957,6 +981,7 @@ document.getElementById("app").addEventListener("click",e=>{
  else if(k==="sn"){st.shopN=+v}
  else if(k==="sf"){st.shopFrom=+v}
  else if(k==="sw"){st.shopWho=v}
+ else if(k==="rmsave"){const w=parseFloat(String(document.getElementById("rmw_"+v).value).replace(",",".")),r=parseInt(document.getElementById("rmr_"+v).value,10);if(w>0&&r>0&&r<=20){const o=S.get("rm",{});o[v]={w,r,d:iso(new Date())};S.set("rm",o);Object.keys(st.open).forEach(x=>{if(x.startsWith("ts_")&&x.endsWith("_"+v))st.open[x]=false})}}
  else if(k==="pick"){const [slot,id]=v.split(":");const o=S.get("sel",{});if(id)o[slot]=id;else delete o[slot];S.set("sel",o);const [gg,ii]=slot.split("-");st.open["sw_"+gg+"_"+ii]=false}
  else if(k==="mf"){st.mf=v}
  else if(k==="sc"){const o=S.get("shopck",{});o[v]=!o[v];S.set("shopck",o)}
@@ -968,7 +993,7 @@ document.getElementById("app").addEventListener("click",e=>{
  else if(k==="del"){S.set("log",S.get("log",[]).filter(x=>x.d!==v))}
  else if(k==="hideinst"){S.set("hideInst",true)}
  else if(k==="install"){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.finally(()=>{deferredPrompt=null;render()})}return}
- else if(k==="exp"){const keys=["chk","wt","log","cp","tests","start","mode"],o={};keys.forEach(x=>o[x]=S.get(x,null));copyText(JSON.stringify(o),document.getElementById("bkm"),document.getElementById("bk"));return}
+ else if(k==="exp"){const keys=["chk","wt","log","cp","tests","start","mode","rm","sel"],o={};keys.forEach(x=>o[x]=S.get(x,null));copyText(JSON.stringify(o),document.getElementById("bkm"),document.getElementById("bk"));return}
  else if(k==="imp"){const m=document.getElementById("bkm");try{const o=JSON.parse(document.getElementById("bk").value);Object.keys(o).forEach(x=>{if(o[x]!==null)S.set(x,o[x])});m.textContent="Wczytano.";render()}catch(err){m.textContent="Nie udało się odczytać tekstu."}return}
  render();
 });
