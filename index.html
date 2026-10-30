@@ -843,6 +843,22 @@ MOB.hip.it[1].v={lab:"WIDOK Z BOKU",k:[
 const CHILD=(hx,ax)=>({raw:{H:[128+hx,138],S:[116+hx,136],P:[76+hx/2,125],E1:[140+hx,142],W1:[ax,146],E2:[140+hx,142],W2:[ax,146],K1:[108,146],A1:[72,146],K2:[108,146],A2:[72,146],L1:[72,148],T1:[64,148],L2:[72,148],T2:[64,148]}});
 MOB.post.it[4].v={k:[CHILD(0,166),CHILD(-4,172),CHILD(-8,176)]};
 MOB.hip.it[4].lab="widok z boku";
+/* ===== redukcja Damiana (v2.3) ===== */
+const KC={banan:105,chleb:2.3,owies:3.8,tort:190,ryz:3.5,ziemn:.77,mak:3.5,pita:165,makr:3.6,bulka:170,batat:.86,bulg:3.4,ryzs:3.5,miod:3,kgryk:3.4};
+const CUTCAT=["Śniadanie","Obiad","Przekąska","Kolacja","Po cardio"],BREAKW=[8,18];
+const M0={};Object.keys(M).forEach(i=>{if((M[i].pf||"m")==="m")M0[i]={kcal:M[i].kcal,q:M[i].q.map(x=>x.slice())}});
+const SM=(k,d)=>{try{const v=localStorage.getItem("p92_"+k);if(v!==null)return JSON.parse(v)}catch(e){}return k in mem?mem[k]:d};
+let CUT={f:1,t:"",w:1};
+function cutFor(d){const P=PROF.m,s0=new Date(SM("start","2026-11-02")+"T12:00:00"),w=Math.max(1,Math.min(P.weeks,Math.floor((d-s0)/(864e5*7))+1)),log=SM("log",[]).slice().sort((a,b)=>a.d<b.d?-1:1),last=log.length?log[log.length-1].kg:null;
+ if(last!=null&&last<=P.goal+.5)return{f:1,w,t:"Cel osiągnięty: utrzymanie wagi, pełne porcje."};
+ if(w>P.phb[1])return{f:1,w,t:"Faza 3: pełne porcje, paliwo na góry. Redukcja tylko, jeśli waga wraca powyżej "+(P.goal+2)+" kg."};
+ if(BREAKW.includes(w))return{f:1,w,t:"Tydzień przerwy w diecie (diet break): pełne porcje, kalorie na poziomie utrzymania. Hormony i głowa odpoczywają, waga może skoczyć o 1 kg wody."};
+ if(w<=P.phb[0])return{f:.5,w,t:"Ostra redukcja: połowa porcji skrobi (ryż, makaron, ziemniaki, pieczywo, owies, banany, miód). Białko, warzywa i tłuszcz bez zmian."};
+ return{f:.75,w,t:"Redukcja: 3/4 porcji skrobi. Białko, warzywa i tłuszcz bez zmian."}}
+function applyCut(f){Object.keys(M0).forEach(i=>{const m=M[i],o=M0[i];if(!CUTCAT.includes(m.c)||f===1){m.q=o.q.map(x=>x.slice());m.kcal=o.kcal;m.cut=0;return}
+ let dk=0;m.q=o.q.map(([p,a])=>{if(!(p in KC)||!a)return[p,a];const u=PR[p][2],n=u==="g"?Math.max(10,Math.round(a*f/5)*5):Math.max(.25,Math.round(a*f*4)/4);dk+=(a-n)*KC[p];return[p,n]});
+ m.kcal=Math.round(o.kcal-dk);m.cut=dk>0?1:0})}
+function setCut(){const c=cutFor(new Date());if(c.f!==CUT.f){applyCut(c.f);const R=(M_CFG.ROT||ROT)[2].m,j=R.findIndex(x=>x[2]);if(c.f<1&&j<0)R.push(["10:30","sk",1]);if(c.f===1&&j>=0)R.splice(j,1)}CUT=c}
 const M_CFG={};
 let PC=PROF.m;
 function applyProfile(id){PID=id;PC=PROF[id];
@@ -930,7 +946,7 @@ function vToday(){
  let h=(!S.get("hideInst",false)?installCard(false):"");
  h+=`<div class="card"><div class="row" style="justify-content:space-between"><div><div class="lab">${DN[d.getDay()]}, ${d.toLocaleDateString("pl-PL",{day:"numeric",month:"long"})}</div>
  <h2 style="margin-top:2px">Tydzień ${wi.w} z ${PC.weeks}</h2></div><div class="dnav"><button data-a="off:-1" aria-label="Poprzedni dzień">‹</button><button data-a="off:0" style="width:auto;padding:0 10px;font-size:12.5px">dziś</button><button data-a="off:1" aria-label="Następny dzień">›</button></div></div>
- <div style="margin-top:6px"><span class="pill acc">${PHN[wi.ph]}</span>${wi.deload?'<span class="pill warn">Tydzień odciążenia: serie −40%</span>':""}${wi.test&&wi.raw>=1?'<span class="pill warn">Tydzień testów ciężaru</span>':""}${wi.taper?'<span class="pill warn">Taper: objętość −50%, intensywność zostaje</span>':""}${(()=>{const n=evDays(d);return n!=null&&n>=0?'<span class="pill acc">'+(n===0?"Dziś start: ":"Do startu "+n+" dni: ")+esc(PC.event.n)+"</span>":""})()}${wi.raw<1?'<span class="pill">Start planu: '+esc(S.get("start","2026-11-02"))+"</span>":""}<span class="pill">${ROT[d.getDay()].kcal} kcal</span></div>
+ <div style="margin-top:6px"><span class="pill acc">${PHN[wi.ph]}</span>${wi.deload?'<span class="pill warn">Tydzień odciążenia: serie −40%</span>':""}${wi.test&&wi.raw>=1?'<span class="pill warn">Tydzień testów ciężaru</span>':""}${wi.taper?'<span class="pill warn">Taper: objętość −50%, intensywność zostaje</span>':""}${(()=>{const n=evDays(d);return n!=null&&n>=0?'<span class="pill acc">'+(n===0?"Dziś start: ":"Do startu "+n+" dni: ")+esc(PC.event.n)+"</span>":""})()}${wi.raw<1?'<span class="pill">Start planu: '+esc(S.get("start","2026-11-02"))+"</span>":""}<span class="pill">${ROT[d.getDay()].m.reduce((x,_,i)=>x+M[mealAt(d.getDay(),i)].kcal,0)} kcal</span>${PID==="m"&&CUT.f<1?'<span class="pill warn">Redukcja: skrobia ×'+String(CUT.f).replace(".",",")+"</span>":""}</div>
  <div class="bar"><i style="width:${pct}%"></i></div><div class="small mut" style="margin-top:5px">${done} z ${items.length} punktów (${pct}%)</div></div><div class="card">`;
  items.forEach(i=>{h+=`<div class="item"><div class="time">${esc(i.t)}</div><button class="ck ${isOn(ds,i.id)?"on":""}" data-a="ck:${i.id}" aria-label="Odhacz"></button><div class="itx"><b>${esc(i.n)}</b><div class="small mut">${esc(i.s)}</div></div>${i.go?`<button class="go" data-a="go:${i.go}">Otwórz</button>`:""}</div>`});
  h+="</div>";
@@ -1018,11 +1034,19 @@ function recipe(id){
 function sumDay(g){const t={kcal:0,p:0,zn:0,k:0,na:0};ROT[g].m.forEach((x,i)=>{const id=mealAt(g,i);for(const k in t)t[k]+=M[id][k]||0});return t}
 function mbar(v,max,col){return `<div class="mbar"><i style="width:${Math.min(100,v/max*100)}%;background:${col}"></i></div>`}
 function mealTags(m){if(m.tg)return `<div class="tags">${m.tg.map(t=>`<span class="pill" style="color:var(--acc2);border-color:var(--acc2)">${esc(t)}</span>`).join("")}</div>`;const t=[];if(m.zn>=4)t.push(`<span class="pill t-zn">Zn ${pl(m.zn)} mg</span>`);if(m.k>=1500)t.push(`<span class="pill t-k">K ${pl(m.k/1000)} g</span>`);if(m.na>=1000)t.push(`<span class="pill t-na">Na ${pl(m.na/1000)} g</span>`);return t.length?`<div class="tags">${t.join("")}</div>`:""}
+function redCard(){const log=S.get("log",[]).slice().sort((a,b)=>a.d<b.d?-1:1);let rate="";
+ if(log.length>=2){const L=log[log.length-1],t0=new Date(L.d+"T12:00:00")-14*864e5,F=log.find(x=>new Date(x.d+"T12:00:00")>=t0)||log[0],days=(new Date(L.d)-new Date(F.d))/864e5;
+  if(days>=6){const wk=(F.kg-L.kg)/days*7,pct=wk/F.kg*100;rate=`<p class="small"><b>Tempo z ostatnich ${Math.round(days)} dni: ${pl(wk)} kg/tydz. (${pl(pct)}% masy)</b>. `+(pct>1.5&&CUT.w>3?"Za szybko po 3. tygodniu: dodaj 1 przekąskę dziennie (ok. +400 kcal).":pct<.5&&CUT.f<1&&CUT.w>3?"Za wolno: sprawdź ważenie jedzenia i kroki, dopiero potem tnij dalej.":"Tempo w normie.")+`</p>`}}
+ return `<div class="card"><h2>Redukcja · tydzień ${CUT.w}</h2><p class="small">${esc(CUT.t)}</p>${rate}
+ <p class="small mut">Cel: 92 kg ok. 26. tygodnia (początek maja 2027), przed blokiem górskim. Plan: faza 1 ok. 1-1,3 kg/tydz., faza 2 ok. 0,7-0,9 kg/tydz. Tygodnie 8 (Święta) i 18 to przerwy w diecie. We wtorki (trening + siatkówka) dochodzi przekąska o 10:30.</p>
+ <p class="small"><b>Granice bezpieczeństwa:</b> białko min. 200 g, tłuszcz min. 60 g dziennie (chroni woreczek żółciowy przy szybkim chudnięciu), sód i potas z jadłospisu bez cięcia. Badania krwi w 1. i 13. tygodniu.</p>
+ <p class="small"><b>Stop, +300 kcal na 5-7 dni, gdy:</b> tętno spoczynkowe rano wyższe o 7+ uderzeń przez 3 dni, zawroty głowy przy wstawaniu, sen poniżej 6 h mimo zmęczenia, spadek siły w 2 kolejnych treningach, ból pod prawym łukiem żebrowym (wtedy lekarz).</p></div>`}
 function vDiet(){
  let h=`<div class="seg"><button class="${st.dv==="plan"?"on":""}" data-a="dv:plan">Jadłospis</button><button class="${st.dv==="rec"?"on":""}" data-a="dv:rec">Menu</button><button class="${st.dv==="shop"?"on":""}" data-a="dv:shop">Zakupy</button></div>`;
  if(st.dv==="rec")return h+vRecipes();
  if(st.dv==="shop")return h+vShop();
  const d=curDate();if(st.dd===null)st.dd=d.getDay();
+ if(PID==="m")h+=redCard();
  const ap=activePromos();if(ap.length){const mine=Object.keys(M).filter(id=>(M[id].pf||"m")===PID&&SWAP.includes(M[id].c)&&promoFor(id).length);
   h+=`<div class="card banner"><h2>Tanio w tym tygodniu</h2>${ap.map(x=>`<div class="small"><b>${esc(x.store)}:</b> ${esc(x.name)}, <b style="color:var(--acc)">${esc(x.price)}</b> do ${fd(x.to)}</div>`).join("")}${mine.length?`<div class="small mut" style="margin-top:8px">Dania z tymi produktami (wybierzesz je przyciskiem „Zmień”):</div><div class="tags">${mine.map(id=>`<span class="pill">${esc(M[id].n)}</span>`).join("")}</div>`:""}</div>`}
  const g=st.dd,r=ROT[g],t=sumDay(g),naT=TARGET.na[g]||TARGET.na.d;
@@ -1039,7 +1063,7 @@ function vDiet(){
  <div><span class="small mut">Sód</span><b class="t-na">${pl(t.na/1000)} g</b><span class="small mut">cel ${pl(naT/1000)} g + sól do smaku</span>${mbar(t.na,naT,"var(--na)")}</div>
  <div><span class="small mut">Białko</span><b>${Math.round(t.p)} g</b><span class="small mut">cel 200-220 g</span>${mbar(t.p,210,"var(--ink)")}</div></div>
  <div class="small mut" style="margin-top:8px">Wartości mikroelementów są szacunkowe. Sól dodawana do potraw (ok. 1-1,5 g sodu dziennie) nie jest wliczona.</div></div><div class="card">`;
- r.m.forEach(([tm],i)=>{const id=mealAt(g,i),m=M[id],ok="ml_"+g+"_"+i,open=st.open[ok],sk="sw_"+g+"_"+i,alts=altsFor(id),pr=promoFor(id);
+ r.m.map((x,i)=>[x[0],i]).sort((a,b)=>tmin(a[0])-tmin(b[0])).forEach(([tm,i])=>{const id=mealAt(g,i),m=M[id],ok="ml_"+g+"_"+i,open=st.open[ok],sk="sw_"+g+"_"+i,alts=altsFor(id),pr=promoFor(id);
   h+=`<div class="meal"><div class="mh"><div><div class="lab">${esc(tm)} · ${esc(m.c)}</div><b>${esc(m.n)}</b></div><div class="mac"><b>${m.kcal}</b> kcal<br>${m.p} g B</div></div>${pr.length?`<div class="small" style="color:var(--acc);font-weight:600">PROMO ${pr.map(x=>esc(x.store)+": "+esc(PR[x.p][0])).join(", ")}</div>`:""}${mealTags(m)}
   <div class="row" style="gap:14px"><button class="more" style="padding-left:0" data-a="op:${ok}">${open?"Zwiń":"Przepis"}</button>${alts.length?`<button class="more" style="padding-left:0" data-a="op:${sk}">${st.open[sk]?"Zamknij wybór":"Zmień ("+alts.length+" opcji)"}</button>`:""}</div>
   ${st.open[sk]?`<div class="det" style="margin-left:0">${alts.map(a=>{const am=M[a],ap=promoFor(a),gs=groupsOf(a);return `<div class="item"><div class="itx"><b>${esc(am.n)}</b><div class="small mut">${am.kcal} kcal · ${am.p} g białka${gs.length?" · "+gs.map(x=>GRPN[x]).join(", "):""}</div>${ap.length?`<div class="small" style="color:var(--acc);font-weight:600">PROMO ${ap.map(x=>esc(x.store)+" "+esc(x.price)).join(", ")}</div>`:""}</div><button class="go" data-a="pick:${g}-${i}:${a}">Wybierz</button></div>`}).join("")}${rawSel(PID)[g+"-"+i]?`<button class="btn2" data-a="pick:${g}-${i}:" style="margin-top:6px">Przywróć domyślne</button>`:""}</div>`:""}
@@ -1110,7 +1134,7 @@ function shopText(){const {tot,days}=shopCompute();let s=`Zakupy Plan 92 (${days
 /* ================= widok: Postępy ================= */
 let CP=[
  {g:"Tydzień 1",it:[["w1a","Waga kuchenna i aplikacja do liczenia (np. Fitatu)"],["w1b","Buty biegowe z amortyzacją dla cięższych biegaczy"],["w1c","Pomiar ciśnienia i badania: morfologia, lipidogram, glukoza"],["w1d","Pomiary startowe: waga, pas, zdjęcia"],["w1e","Sprawdzić na siłowni: sztanga, skrzynia, maszyna do podciągania z asystą"],["w1f","Pierwsze gotowanie w niedzielę"]]},
- {g:"Kamienie milowe wagi",it:[["k113","113 kg"],["k109","109 kg: koniec fazy 1"],["k105","105 kg"],["k101","101 kg: koniec fazy 2"],["k97","97 kg"],["k93","93 kg: koniec fazy 3"],["k92","92 kg: cel"]]},
+ {g:"Kamienie milowe wagi",it:[["k113","113 kg"],["k109","109 kg"],["k105","105 kg"],["k101","101-102 kg: koniec fazy 1 (luty)"],["k97","97 kg"],["k93","93 kg"],["k92","92 kg: cel, koniec fazy 2 (maj)"]]},
  {g:"Siła i sprawność",it:[["s1","Martwy ciąg 5 powtórzeń × masa ciała"],["s2","Pierwsze czyste podciągnięcie"],["s3","5 czystych podciągnięć"],["s4","Pozycja łódki 60 s"],["s5","10 km poniżej 55 min"]]},
  {g:"Pętla Karkonoska 140 km / 48 h",it:[["g1","Marsz 25 km z plecakiem 8 kg"],["g5","Marsz 40 km w jeden dzień"],["g6","Odcinek nocny 4 h z czołówką"],["g2","Back-to-back nr 1: 35 + 25 km"],["g3","Back-to-back nr 2: 45 + 35 km"],["g7","Jedzenie na trasie: 250-300 kcal/h przetestowane"],["g4","Buty, skarpety i plecak przetestowane na 2 trasach 30+ km"]]}
 ];
@@ -1133,7 +1157,7 @@ function vProg(){
  h+=`</table></div><div class="card"><h2>Ustawienia</h2><label class="small mut">Data startu planu (poniedziałek tygodnia 1)</label><input type="date" id="sd" value="${esc(S.get("start","2026-11-02"))}" style="margin:6px 0 12px">
  <div class="small mut">Dane zapisują się w tej aplikacji na tym telefonie. Kopia zapasowa: skopiuj tekst i zachowaj w notatkach, przywrócisz go wklejając poniżej.</div>
  <div class="row" style="margin-top:8px"><button class="btn2" data-a="exp">Kopiuj dane</button><button class="btn2" data-a="imp">Wczytaj z pola</button></div><textarea id="bk" rows="3" style="margin-top:8px" placeholder="tu pojawi się lub wklejasz kopię"></textarea><div id="bkm" class="small mut"></div>
- <div class="small mut" style="margin-top:10px">Wersja 2.2 · protokół ${PC.code} · profil: ${PC.name}</div></div>`;
+ <div class="small mut" style="margin-top:10px">Wersja 2.3 · protokół ${PC.code} · profil: ${PC.name}</div></div>`;
  return h;
 }
 function chart(log){
@@ -1149,7 +1173,7 @@ function chart(log){
 
 /* ================= render i zdarzenia ================= */
 const TT={today:"Dziś",train:"Trening",mob:"Mobilność i rozciąganie",diet:"Dieta",prog:"Postępy"};
-function render(){
+function render(){setCut();
  const app=document.getElementById("app"),wi=wkInfo(curDate());
  document.getElementById("ttl").textContent=TT[st.tab];
  document.getElementById("hsub").textContent=PC.from+"→"+PC.goal+" kg // tydz. "+String(wi.w).padStart(2,"0")+"/"+PC.weeks+" // "+PHN[wi.ph].replace("Faza ","F").replace(": "," ");
