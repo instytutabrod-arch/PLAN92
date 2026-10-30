@@ -133,6 +133,7 @@ a{color:var(--acc2)}
 .kpi .lab{font-size:9.5px}.kpi b{font:700 18px var(--mono);display:block}
 .warnl{border:1px solid var(--na);background:#fff5f3;padding:8px 10px;margin-top:10px;font-size:13.5px}.warnl b{font:700 11px var(--mono);color:var(--na);text-transform:uppercase;letter-spacing:.5px}.warnl b::before{content:"⚠ "}.warnl ul{margin:6px 0 0;padding-left:18px}
 .v3d{position:relative;margin:8px 0}.v3d .figbig{margin:0}.v3d canvas{display:block;width:100%;height:290px}.v3bar{display:flex;gap:5px;align-items:center;margin-top:5px}.v3bar button{background:#fff;border:1px solid var(--ink);border-radius:2px;padding:5px 9px;font:500 11px var(--mono);text-transform:uppercase}.v3lab{font:700 10px var(--mono);color:#fff;background:var(--acc);padding:3px 6px;margin-right:auto}
+.stripw{margin:8px 0;background:#fff;border:1px solid var(--ink);padding:6px;overflow-x:auto}.stripw svg.strip{display:block;width:100%;height:auto}
 </style>
 </head>
 <body>
@@ -200,6 +201,7 @@ function pose(s,c){
 }
 const nAng=d=>((d%360)+540)%360-180,ANG=["t","a1","a2","l1","l2","to"];
 function lerpSpec(a,b,f){
+ const fill=x=>{x=Object.assign({},x);if(!x.raw){if(!x.l2)x.l2=x.l1;if(!x.a2)x.a2=x.a1}return x};a=fill(a);b=fill(b);
  const o={};
  for(const k in a){const x=a[k],y=b[k];
   if(y===undefined){o[k]=x;continue}
@@ -271,8 +273,8 @@ function figLoop(now){if(!document.hidden){for(const L of LIVE)if(L.el.isConnect
 requestAnimationFrame(figLoop);
 /* ================= widok 3D (Three.js) ================= */
 const V3={reg:[],active:null,loading:false,failed:false};let V3SEQ=0;
-function fig3(v,key){if(!v)return "";const id="v3_"+(V3SEQ++);V3.reg.push({id,n:normFig(v),key});
- return `<div class="v3d" id="${id}"><div class="figbig">${fig(v)}</div><div class="v3bar"><span class="v3lab">3D</span><button data-a="cam:side">Bok</button><button data-a="cam:iso">3/4</button><button data-a="cam:front">Przód</button><button data-a="cam:spin">Obrót</button></div>${V3.failed?`<div class="small mut">Widok 3D niedostępny w tej przeglądarce, pokazuję rysunek 2D.</div>`:""}</div>`}
+function fig3(v,key){return `<div class="stripw">${strip(v,"Kolejne etapy ruchu: 1 → 2 → 3. Pomarańczowa przerywana linia na ostatnim etapie: tor sztangi lub stawu.")}</div>`;if(!v)return "";const id="v3_"+(V3SEQ++);V3.reg.push({id,n:normFig(v),key});
+ return `<div class="v3d" id="${id}"><div class="stripw">${strip(v)}</div><div class="v3bar"><span class="v3lab">3D</span><button data-a="cam:side">Bok</button><button data-a="cam:iso">3/4</button><button data-a="cam:front">Przód</button><button data-a="cam:spin">Obrót</button></div>${V3.failed?`<div class="small mut">Widok 3D niedostępny w tej przeglądarce, pokazuję rysunek 2D.</div>`:""}</div>`}
 function load3D(cb){if(window.THREE)return cb();if(V3.failed)return;if(V3.loading){V3.wait=cb;return}V3.loading=true;const s=document.createElement("script");s.src="three.min.js";s.onload=()=>{V3.loading=false;cb();if(V3.wait){V3.wait=null}};s.onerror=()=>{V3.loading=false;V3.failed=true};document.head.appendChild(s)}
 function mount3D(){
  const list=V3.reg.splice(0);if(V3.active){V3.active.dispose();V3.active=null}
@@ -360,6 +362,45 @@ function build3D(el,n){
  const ctl={upd,el,st3,set(m){if(m==="spin"){st3.auto=true;st3.t0=performance.now();return}st3.auto=false;st3.az=m==="side"?0:m==="front"?90:35;st3.el=m==="front"?8:14},dispose(){try{r.dispose();r.forceContextLoss()}catch(e){}}};
  return ctl;
 }
+/* ================= plansze etapów ruchu (statyczne) ================= */
+function drawStatic(J,n,ox,id,trPts,showTr){
+ const c=n.c||{},X=v=>(v+ox).toFixed(1),Yv=v=>v.toFixed(1);let h="";
+ if(!n.nf)h+=`<line x1="${ox+4}" y1="151" x2="${ox+196}" y2="151" stroke="${INK}" stroke-width="1.5"/><path d="${Array.from({length:19},(_,i)=>`M${ox+i*10+10} 151 l-6 7`).join(" ")}" stroke="${FAR}" stroke-width="1"/>`;
+ [].concat(c.ax||[]).forEach(x=>{h+=`<line x1="${X(x)}" y1="-10" x2="${X(x)}" y2="151" stroke="${INK}" stroke-width="1" stroke-dasharray="3 3" opacity=".45"/>`});
+ (c.gh||[]).forEach(g=>{h+=`<line x1="${X(g[0])}" y1="${g[1]}" x2="${X(g[2])}" y2="${g[3]}" stroke="${RED}" stroke-width="3" stroke-dasharray="4 3" stroke-linecap="round" opacity=".75"/>`});
+ n.pr.forEach(p=>{const k=p[0];
+  if(k==="rect")h+=`<rect x="${X(p[1])}" y="${p[2]}" width="${p[3]}" height="${p[4]}" fill="#e9e8e0" stroke="${INK}" stroke-width="1"/>`;
+  else if(k==="line")h+=`<line x1="${X(p[1])}" y1="${p[2]}" x2="${X(p[3])}" y2="${p[4]}" stroke="#8b8a82" stroke-width="3.5" stroke-linecap="round"/>`;
+  else if(k==="bar")h+=`<line x1="${X(p[1])}" y1="${p[3]}" x2="${X(p[2])}" y2="${p[3]}" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/>`;
+  else if(k==="circ")h+=`<circle cx="${X(p[1])}" cy="${p[2]}" r="${p[3]}" fill="none" stroke="#8b8a82" stroke-width="3.5"/>`});
+ if(showTr&&trPts)h+=`<polyline points="${trPts.map(q=>X(q[0])+","+Yv(q[1])).join(" ")}" fill="none" stroke="${ORG}" stroke-width="1.6" stroke-dasharray="2 3"/>`;
+ SEGS.forEach(s=>{const a=J[s[0]],b=J[s[1]];if(!a||!b)return;const hi=s[2]===NB?NH:FH,o=s[3]*.17;
+  h+=`<line x1="${X(a[0])}" y1="${Yv(a[1])}" x2="${X(b[0])}" y2="${Yv(b[1])}" stroke="${s[2]}" stroke-width="${s[3]}" stroke-linecap="round"/><line x1="${X(a[0]-o)}" y1="${Yv(a[1]-o)}" x2="${X(b[0]-o)}" y2="${Yv(b[1]-o)}" stroke="${hi}" stroke-width="${(s[3]*.3).toFixed(1)}" stroke-linecap="round" opacity=".7"/>`;
+  if(s[4]&&J[s[4]])h+=`<circle cx="${X(J[s[4]][0])}" cy="${Yv(J[s[4]][1])}" r="${(s[3]/2+.6).toFixed(1)}" fill="${s[2]}"/>`});
+ h+=`<circle cx="${X(J.H[0])}" cy="${Yv(J.H[1])}" r="9.5" fill="url(#hg${id})" stroke="${INK}" stroke-width="1.6"/>`;
+ n.pr.forEach(p=>{const k=p[0];
+  if(k==="bag"&&p[1]==="S"&&J.S&&J.P){const S0=J.S,P0=J.P,dx=S0[0]-P0[0],dy=S0[1]-P0[1],L=Math.hypot(dx,dy)||1,ux=dx/L,uy=dy/L;let nx=uy,ny=-ux;if(-nx-ny<0){nx=-nx;ny=-ny}
+   const cx=P0[0]+dx*.62+nx*8,cy=P0[1]+dy*.62+ny*8,ang=Math.atan2(uy,ux)*180/Math.PI+90,ax=X(cx),ay=Yv(cy),sg=X(1)-X(0);
+   h+=`<g transform="translate(${ax} ${ay}) rotate(${sg<0?-ang:ang})"><rect x="-6" y="-13" width="12" height="26" rx="3" fill="url(#pg${id})" stroke="${INK}" stroke-width=".9"/><line x1="-6" y1="2" x2="6" y2="2" stroke="${INK}" stroke-width=".6"/></g>`;return}
+  if(["bb","db","bag","pad","ball","mb"].includes(k)){const q=J[p[1]];if(!q)return;const x=q[0]+(p[3]||0),y=q[1]+(k==="ball"?9:(p[4]||0));
+   if(k==="bb"){const r=p[2]||16;h+=`<ellipse cx="${X(x+8)}" cy="${Yv(y-5)}" rx="${(r*.38).toFixed(1)}" ry="${r}" fill="#9c2f00" stroke="${INK}" stroke-width="1"/><line x1="${X(x+11)}" y1="${Yv(y-7)}" x2="${X(x-4)}" y2="${Yv(y+2.5)}" stroke="#55544e" stroke-width="2.6"/><ellipse cx="${X(x)}" cy="${Yv(y)}" rx="${(r*.38).toFixed(1)}" ry="${r}" fill="url(#pg${id})" stroke="${INK}" stroke-width="1"/>`}
+   else h+=`<circle cx="${X(x)}" cy="${Yv(y)}" r="${k==="bag"?9.5:k==="mb"?8:k==="db"?6:k==="pad"?4.5:5}" fill="url(#pg${id})" stroke="${INK}" stroke-width=".8"/>`}
+  else if(k==="cable"){const a=typeof p[1]==="number"?[p[1],p[2]]:J[p[1]],b=J[typeof p[1]==="number"?p[3]:p[2]];if(a&&b)h+=`<line x1="${X(a[0])}" y1="${Yv(a[1])}" x2="${X(b[0])}" y2="${Yv(b[1])}" stroke="${ORG}" stroke-width="1.6"/>`}
+  else if(k==="bbar"){const a=J[p[1]],b=J[p[2]];if(a&&b)h+=`<line x1="${X(a[0]-6)}" y1="${Yv(a[1])}" x2="${X(b[0]+6)}" y2="${Yv(b[1])}" stroke="${ORG}" stroke-width="3.5" stroke-linecap="round"/>`}});
+ return h;
+}
+let SSEQ=0;
+function strip(v,cap){if(!v)return "";const n=normFig(v),id="st"+(SSEQ++),us=n.k.length>2?n.k.map((_,i)=>i/(n.k.length-1)):[0,.5,1];
+ const tr=n.c.tr?Array.from({length:41},(_,i)=>frameAt(n,i/40)[n.c.tr]):null;
+ let h=`<svg viewBox="0 -24 ${us.length*200} 186" xmlns="http://www.w3.org/2000/svg" class="strip"><defs><radialGradient id="hg${id}" cx="35%" cy="32%" r="75%"><stop offset="0" stop-color="#fff"/><stop offset=".5" stop-color="#d4d3cb"/><stop offset="1" stop-color="#5f5e57"/></radialGradient><radialGradient id="pg${id}" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#ff9a66"/><stop offset=".5" stop-color="#ff4d00"/><stop offset="1" stop-color="#9c2f00"/></radialGradient></defs>`;
+ us.forEach((u,i)=>{const ox=i*200;h+=`<rect x="${ox+2}" y="-22" width="196" height="182" fill="none" stroke="#cfcec4" stroke-width="1"/><text x="${ox+10}" y="-8" font-family="JetBrains Mono,monospace" font-size="13" font-weight="700" fill="${ORG}">${i+1}</text>`;
+  h+=drawStatic(frameAt(n,u),n,ox,id,tr,i===us.length-1);
+  if(i<us.length-1)h+=`<path d="M${ox+192} 60 l10 0 m-4 -4 l4 4 l-4 4" stroke="${ORG}" stroke-width="2" fill="none"/>`});
+ if(n.lab)h+=`<text x="${us.length*200-8}" y="-8" text-anchor="end" font-family="JetBrains Mono,monospace" font-size="10" fill="${ORG}">${esc(n.lab)}</text>`;
+ return h+`</svg>`+(cap?`<div class="small mut" style="margin-top:4px">${cap}</div>`:"");
+}
+function thumb(v){if(!v)return "";const n=normFig(v),id="th"+(SSEQ++),u=n.k.length>2?1:1;
+ return `<svg viewBox="0 -24 200 186" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="hg${id}" cx="35%" cy="32%" r="75%"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#5f5e57"/></radialGradient><radialGradient id="pg${id}" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#ff9a66"/><stop offset="1" stop-color="#9c2f00"/></radialGradient></defs>${drawStatic(frameAt(n,u),n,0,id,null,false)}</svg>`}
 /* widok z przodu: kolano nad stopą */
 function frontSq(depth){const d=depth;return{lab:"WIDOK Z PRZODU",d:3,k:[{raw:{H:[100,20],S:[100,34],P:[100,80],E1:[84,42],W1:[80,28],E2:[116,42],W2:[120,28],K1:[91,114],A1:[84,147],K2:[109,114],A2:[116,147],L1:[86,149],T1:[77,149],L2:[114,149],T2:[123,149]}},{raw:{H:[100,20+d],S:[100,34+d],P:[100,80+d],E1:[84,42+d],W1:[80,28+d],E2:[116,42+d],W2:[120,28+d],K1:[80,112],A1:[84,147],K2:[120,112],A2:[116,147],L1:[86,149],T1:[77,149],L2:[114,149],T2:[123,149]}}],pr:[["bbar","W1","W2"]],c:{ax:[80,120],axl:"KOLANO NAD PALCAMI",gh:[[100,80+d,96,112],[96,112,84,147],[100,80+d,104,112],[104,112,116,147]],ghl:[128,128]}}}
 
@@ -528,11 +569,11 @@ let EVE={
 0:{t:"9:30",ph:[["run","Długi bieg 75-90 min (ok. 12-14 km)","Najwolniejszy bieg tygodnia. Co tydzień +5 min, w tygodniu odciążenia 60 min."],["run","Długi bieg 100-110 min (ok. 16-18 km)","Strefa 2, ostatnie 15 min swobodnie szybciej co drugi tydzień."],["run","Długi bieg 2 h w terenie (ok. 18-20 km)","Albo drugi dzień marszu w weekendy próby generalnej."]]}
 };
 const EVKEY={A:1,B:2,C:4,D:5,ND:0};
-function eveCard(g,ph){const e=EVE[g];if(!e)return "";const x=e.ph[ph-1];return `<div class="card"><div class="lab">Druga sesja · ${e.t}</div><h2 style="margin-top:2px">${esc(x[1])}</h2><div class="figbig">${fig(x[0]==="bike"?BIKEV:x[0]==="run"?RUNV:null)}</div><p class="small" style="margin:4px 0">${esc(x[2])}</p>${x[0]==="run"?`<p class="small mut" style="margin:4px 0">Ból kolana, piszczeli albo ścięgna Achillesa: zamień bieg na rower tej samej długości. Bieg na zmęczonych nogach przy obecnej masie to najczęstsza przyczyna przerwy w planie.</p>`:""}</div>`}
+function eveCard(g,ph){const e=EVE[g];if(!e)return "";const x=e.ph[ph-1];return `<div class="card"><div class="lab">Druga sesja · ${e.t}</div><h2 style="margin-top:2px">${esc(x[1])}</h2><div class="stripw">${strip(x[0]==="bike"?BIKEV:x[0]==="run"?RUNV:null)}</div><p class="small" style="margin:4px 0">${esc(x[2])}</p>${x[0]==="run"?`<p class="small mut" style="margin:4px 0">Ból kolana, piszczeli albo ścięgna Achillesa: zamień bieg na rower tej samej długości. Bieg na zmęczonych nogach przy obecnej masie to najczęstsza przyczyna przerwy w planie.</p>`:""}</div>`}
 let CARDIO={
 RUN:{n:"Bieg spokojny + brzuch",s:"Strefa tlenowa (zone 2)",v:RUNV,ph:["60 min spokojnie (ok. 9-10 km), tętno w strefie 2, rozmowa pełnymi zdaniami. Potem 10 min: pozycja łódki 3 × 30 s i skręty rosyjskie 3 × 20. Tydzień w fazie 1: ok. 45 km biegu (tydzień 1-2: ok. 35 km).","70 min (ok. 11 km). Co drugi tydzień w środku 10 × 1 min mocno pod górkę, zejście truchtem. Potem brzuch 10 min. Tydzień w fazie 2: ok. 55 km.","75 min w terenie z podbiegami (ok. 12 km), spokojnie. Potem brzuch 10 min. Tydzień w fazie 3: ok. 60 km plus marsze."],home:"Bez zmian: bieg na zewnątrz. Przy złej pogodzie 45 min szybkiego marszu pod górę na bieżni lub orbitrek."},
-SOB:{n:"Długi wysiłek",s:"Rower w terenie lub marsz z plecakiem",v2:BIKEV,v:{A:{p:[100,84],t:20,a1:[-20,40],a2:[30,60],l1:[40,-5],l2:[-15,-25],to:[90,80]},B:{p:[100,84],t:20,a1:[30,60],a2:[-20,40],l1:[-15,-25],l2:[40,-5],to:[80,90]},pr:[["bag","S"]],d:1.6},ph:["Rower w terenie 1,5-2 h, spokojnie, na luzie w oddychaniu.","Rower 2-2,5 h albo marsz 15 km z plecakiem 6 kg.","Marsz górski 15-25 km, przewyższenie 800-1500 m, plecak 8-12 kg. W czerwcu dwa weekendy marszu w sobotę i niedzielę: próba generalna przed Kotliną."],home:"Bez zmian. Weź elektrolity i coś na trasę."},
-ND:{n:"Długi bieg i regeneracja",s:"Długi bieg rano, wieczorem rozciąganie 20 min",v:RUNV,ph:["Długi bieg 75-90 min (ok. 12-14 km), najwolniej w tygodniu. Wieczorem rozciąganie. Jeden wolny posiłek w ciągu dnia.","Długi bieg 100-110 min (ok. 16-18 km). Wieczorem rozciąganie.","Długi bieg 2 h w terenie (ok. 18-20 km) albo drugi dzień marszu w weekendy próby generalnej."],home:"Bez zmian."}
+SOB:{n:"Długi wysiłek",s:"Rower w terenie lub marsz z plecakiem",v2:BIKEV,v:{A:{p:[100,84],t:20,a1:[-20,40],a2:[30,60],l1:[40,-5],l2:[-15,-25],to:[90,80]},B:{p:[100,84],t:20,a1:[30,60],a2:[-20,40],l1:[-15,-25],l2:[40,-5],to:[80,90]},pr:[["bag","S"]],d:1.6},ph:["Rower w terenie 1,5-2 h, spokojnie, na luzie w oddychaniu.","Rower 2-2,5 h albo marsz 15 km z plecakiem 6 kg.","Marsz górski 25-45 km, przewyższenie 1000-2000 m, plecak 6-8 kg, tempo 4,5-5 km/h z postojami max 10 min. Raz w miesiącu odcinek nocny 3-4 h z czołówką. W czerwcu dwa weekendy sobota + niedziela (np. 45 + 35 km): próba generalna przed Pętlą Karkonoską 140 km / 48 h."],home:"Bez zmian. Weź elektrolity i coś na trasę."},
+ND:{n:"Długi bieg i regeneracja",s:"Długi bieg rano, wieczorem rozciąganie 20 min",v:RUNV,ph:["Długi bieg 75-90 min (ok. 12-14 km), najwolniej w tygodniu. Wieczorem rozciąganie. Jeden wolny posiłek w ciągu dnia.","Długi bieg 100-110 min (ok. 16-18 km). Wieczorem rozciąganie.","Drugi dzień marszu na zmęczonych nogach: 20-35 km (back-to-back), albo długi bieg 2 h w terenie (ok. 18-20 km). Po marszu: stopy, pęcherze, paznokcie."],home:"Bez zmian."}
 };
 let DAYPLAN={1:"A",2:"B",3:"RUN",4:"C",5:"D",6:"SOB",0:"ND"};
 
@@ -787,6 +828,21 @@ K_ROT[2].m[3]=["16:30","kiso"];K_ROT[4].m[3]=["16:30","kiso"];K_ROT[6].m[3]=["17
 /* bez białek z kartonu: białka ze świeżych jajek */
 PR.bial=["białka ze świeżych jajek","Nabiał i jajka","szt"];
 Object.values(M).forEach(m=>{m.q=m.q.map(([p,q])=>p==="bial"?["bial",Math.max(1,Math.round(q/33))]:[p,q]);m.st=m.st.map(x=>x.replace(/białka z kartonu|białkami/g,y=>y==="białkami"?"białkami (oddziel je od żółtek)":"białka ze świeżych jajek"))});
+/* ===== poprawione pozycje (v2.1) ===== */
+EX.ohp.h.v={k:[{f:[150,147],l1:[38,38],t:-100,to:[10,10]},{f:[150,147],l1:[38,38],t:-130,to:[10,10]}],c:{W1:[74,147],eb:"back"},d:2.4};
+EX.idb.h.v={k:[{f:[180,118],l1:[72,72],t:-72,to:[10,10]},{f:[180,118],l1:[84,84],t:-84,to:[10,10]}],c:{W1:[70,147],eb:"fwd",tr:"S"},pr:[["rect",165,120,35,30]]};
+EX.rt.v={lab:"WIDOK Z PRZODU",k:[
+ {raw:{H:[100,74],S:[100,88],P:[100,135],E1:[84,104],W1:[72,124],E2:[90,108],W2:[76,126],K1:[86,112],A1:[88,146],K2:[114,112],A2:[112,146],L1:[86,148],T1:[80,148],L2:[114,148],T2:[120,148]}},
+ {raw:{H:[100,74],S:[100,88],P:[100,135],E1:[90,108],W1:[100,118],E2:[110,108],W2:[100,118],K1:[86,112],A1:[88,146],K2:[114,112],A2:[112,146],L1:[86,148],T1:[80,148],L2:[114,148],T2:[120,148]}},
+ {raw:{H:[100,74],S:[100,88],P:[100,135],E1:[110,108],W1:[124,126],E2:[116,104],W2:[128,124],K1:[86,112],A1:[88,146],K2:[114,112],A2:[112,146],L1:[86,148],T1:[80,148],L2:[114,148],T2:[120,148]}}],pr:[["mb","W1"]]};
+const C90={H:[100,82],S:[100,95],P:[100,140]};
+MOB.hip.it[1].v={lab:"WIDOK Z BOKU",k:[
+ {raw:Object.assign({},C90,{E1:[108,118],W1:[118,138],E2:[92,118],W2:[84,138],K1:[134,144],A1:[128,146],L1:[128,148],T1:[124,148],K2:[96,146],A2:[66,146],L2:[66,148],T2:[60,148]})},
+ {raw:Object.assign({},C90,{E1:[108,118],W1:[118,138],E2:[92,118],W2:[84,138],K1:[120,112],A1:[118,146],L1:[118,148],T1:[126,148],K2:[110,112],A2:[104,146],L2:[104,148],T2:[112,148]})},
+ {raw:Object.assign({},C90,{E1:[108,118],W1:[118,138],E2:[92,118],W2:[84,138],K2:[134,144],A2:[128,146],L2:[128,148],T2:[124,148],K1:[96,146],A1:[66,146],L1:[66,148],T1:[60,148]})}]};
+const CHILD=(hx,ax)=>({raw:{H:[128+hx,138],S:[116+hx,136],P:[76+hx/2,125],E1:[140+hx,142],W1:[ax,146],E2:[140+hx,142],W2:[ax,146],K1:[108,146],A1:[72,146],K2:[108,146],A2:[72,146],L1:[72,148],T1:[64,148],L2:[72,148],T2:[64,148]}});
+MOB.post.it[4].v={k:[CHILD(0,166),CHILD(-4,172),CHILD(-8,176)]};
+MOB.hip.it[4].lab="widok z boku";
 const M_CFG={};
 let PC=PROF.m;
 function applyProfile(id){PID=id;PC=PROF[id];
@@ -900,13 +956,13 @@ function exCard(key,idx,row,ds,mode){
  const ok="ex_"+key+"_"+idx,open=st.open[ok];
  const hold=(alt?e.h.hold:e.hold)||0;
  const wkey=id+(mode==="home"?"_h":""),wv=S.get("wt",{})[wkey]||"";
- let h=`<div class="ex"><div class="exh"><div class="num">${idx+1}</div><div class="exn"><b>${esc(nm)}${en?` <i class="mut" style="font-weight:400">(${esc(en)})</i>`:""}</b><span class="small mut">${esc(dose)} · przerwa ${esc(rest)}</span>${hold?`<div style="margin-top:6px"><button class="tbtn" data-a="tm:${hold}:${esc(nm)}">Minutnik ${hold} s</button></div>`:""}</div><div class="figw" data-a="op:${ok}">${fig(vis)}</div></div>
+ let h=`<div class="ex"><div class="exh"><div class="num">${idx+1}</div><div class="exn"><b>${esc(nm)}${en?` <i class="mut" style="font-weight:400">(${esc(en)})</i>`:""}</b><span class="small mut">${esc(dose)} · przerwa ${esc(rest)}</span>${hold?`<div style="margin-top:6px"><button class="tbtn" data-a="tm:${hold}:${esc(nm)}">Minutnik ${hold} s</button></div>`:""}</div><div class="figw" data-a="op:${ok}">${thumb(vis)}</div></div>
  <div class="dots">`;
  for(let s=1;s<=sets;s++)h+=`<button class="dot ${s<=doneSets?"on":""}" data-a="set:${sid}:${s}">${s}</button>`;
  h+=`</div>${mode==="home"&&e.h?"":loadBlock(id,dose,key)}<div class="wt"><input data-w="${wkey}" value="${esc(wv)}" placeholder="ciężar × powt., np. 80 × 5"></div>`;
  h+=`<button class="more" data-a="op:${ok}">${open?"Zwiń opis":"Jak wykonać"}</button>`;
  if(open){
-  h+=`<div class="det">${fig3(vis,ok)}${!alt&&e.fv?`<div class="figbig">${fig(e.fv)}</div>`:""}${e.x?`<div class="warnl"><b>Tego unikaj: ryzyko kontuzji</b><ul>${e.x.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`:""}`;
+  h+=`<div class="det">${fig3(vis,ok)}${!alt&&e.fv?`<div class="stripw">${strip(e.fv,"Widok z przodu: kolano prowadzone nad palcami. Czerwone linie: błąd, kolana do środka.")}</div>`:""}${e.x?`<div class="warnl"><b>Tego unikaj: ryzyko kontuzji</b><ul>${e.x.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`:""}`;
   if(alt)h+=`<p>${esc(e.h.d)}</p><div class="alt"><b>Na siłowni:</b> ${esc(e.n)}</div></div>`;
   else h+=`<p>${esc(e.d)}</p><ul>${e.c.map(c=>`<li>${esc(c)}</li>`).join("")}</ul>${e.h?`<div class="alt"><b>W domu:</b> ${esc(e.h.n)}. ${esc(e.h.d)}</div>`:""}</div>`;
  }
@@ -930,7 +986,7 @@ function vTrain(){
   h+=`<div class="card"><h2>${esc(c.n)}</h2><div class="small mut">${esc(c.s)}</div>${fig3(c.v)}<h3>Teraz (${PHN[wi.ph]})</h3><p style="margin:4px 0">${esc(c.ph[wi.ph-1])}</p>${mode==="home"?`<div class="alt">${esc(c.home)}</div>`:""}<h3>Pozostałe fazy</h3>`;
   c.ph.forEach((p,i)=>{if(i!==wi.ph-1)h+=`<p class="small mut" style="margin:4px 0"><b>${PHN[i+1]}:</b> ${esc(p)}</p>`});
   h+=`</div>`;
-  if(c.v2)h+=`<div class="card"><div class="lab">Wariant rowerowy</div><div class="figbig">${fig(c.v2)}</div></div>`;
+  if(c.v2)h+=`<div class="card"><div class="lab">Wariant rowerowy</div><div class="stripw">${strip(c.v2)}</div></div>`;
   if(key==="RUN"){h+=`<div class="card"><h2>Brzuch po biegu</h2>`;[["hbh","3 × 30-45 s","30 s"],["rt","3 × 20","30 s"]].forEach((r,i)=>h+=exCard("RUN",i,r,ds,mode));h+="</div>"}
  }
  return h;
@@ -942,7 +998,7 @@ function vMob(){
  Object.keys(MOB).forEach(k=>h+=`<button class="chip ${k===cur?"on":""}" data-a="mob:${k}">${MOB[k].n}</button>`);
  const r=MOB[cur];
  h+=`</div><div class="card"><h2>${esc(r.n)}</h2><div class="small mut">${esc(r.s)}</div></div><div class="card">`;
- r.it.forEach((x,i)=>{const id="mob_"+cur+"_"+i;h+=`<div class="ex"><div class="exh"><button class="ck ${isOn(ds,id)?"on":""}" data-a="ck:${id}" style="margin-top:2px"></button><div class="exn"><b>${esc(x.n)}${x.e?` <i class="mut small" style="font-weight:400">(${esc(x.e)})</i>`:""}</b><div class="small" style="color:var(--acc2)">${esc(x.dose)}</div>${x.hold?`<div style="margin-top:6px"><button class="tbtn" data-a="tm:${x.hold}:${esc(x.n)}">Minutnik ${x.hold} s</button></div>`:""}</div><div class="figw" data-a="op:m3_${id}">${fig(x.v)}</div></div><div class="small mut" style="margin:8px 0 0 38px">${esc(x.d)}</div><button class="more" data-a="op:m3_${id}">${st.open["m3_"+id]?"Zamknij 3D":"Pokaż w 3D"}</button>${st.open["m3_"+id]?`<div class="det">${fig3(x.v,"m3_"+id)}</div>`:""}</div>`});
+ r.it.forEach((x,i)=>{const id="mob_"+cur+"_"+i;h+=`<div class="ex"><div class="exh"><button class="ck ${isOn(ds,id)?"on":""}" data-a="ck:${id}" style="margin-top:2px"></button><div class="exn"><b>${esc(x.n)}${x.e?` <i class="mut small" style="font-weight:400">(${esc(x.e)})</i>`:""}</b><div class="small" style="color:var(--acc2)">${esc(x.dose)}</div>${x.hold?`<div style="margin-top:6px"><button class="tbtn" data-a="tm:${x.hold}:${esc(x.n)}">Minutnik ${x.hold} s</button></div>`:""}</div><div class="figw" data-a="op:m3_${id}">${thumb(x.v)}</div></div><div class="small mut" style="margin:8px 0 0 38px">${esc(x.d)}</div><button class="more" data-a="op:m3_${id}">${st.open["m3_"+id]?"Zwiń etapy":"Pokaż etapy ruchu"}</button>${st.open["m3_"+id]?`<div class="det">${fig3(x.v,"m3_"+id)}</div>`:""}</div>`});
  return h+"</div>";
 }
 
@@ -1052,7 +1108,7 @@ let CP=[
  {g:"Tydzień 1",it:[["w1a","Waga kuchenna i aplikacja do liczenia (np. Fitatu)"],["w1b","Buty biegowe z amortyzacją dla cięższych biegaczy"],["w1c","Pomiar ciśnienia i badania: morfologia, lipidogram, glukoza"],["w1d","Pomiary startowe: waga, pas, zdjęcia"],["w1e","Sprawdzić na siłowni: sztanga, skrzynia, maszyna do podciągania z asystą"],["w1f","Pierwsze gotowanie w niedzielę"]]},
  {g:"Kamienie milowe wagi",it:[["k113","113 kg"],["k109","109 kg: koniec fazy 1"],["k105","105 kg"],["k101","101 kg: koniec fazy 2"],["k97","97 kg"],["k93","93 kg: koniec fazy 3"],["k92","92 kg: cel"]]},
  {g:"Siła i sprawność",it:[["s1","Martwy ciąg 5 powtórzeń × masa ciała"],["s2","Pierwsze czyste podciągnięcie"],["s3","5 czystych podciągnięć"],["s4","Pozycja łódki 60 s"],["s5","10 km poniżej 55 min"]]},
- {g:"Przed Kotliną",it:[["g1","Marsz 20 km z plecakiem 10 kg"],["g2","Weekend dwudniowy w Sudetach nr 1"],["g3","Weekend dwudniowy w Sudetach nr 2"],["g4","Buty i plecak przetestowane na 2 trasach"]]}
+ {g:"Pętla Karkonoska 140 km / 48 h",it:[["g1","Marsz 25 km z plecakiem 8 kg"],["g5","Marsz 40 km w jeden dzień"],["g6","Odcinek nocny 4 h z czołówką"],["g2","Back-to-back nr 1: 35 + 25 km"],["g3","Back-to-back nr 2: 45 + 35 km"],["g7","Jedzenie na trasie: 250-300 kcal/h przetestowane"],["g4","Buty, skarpety i plecak przetestowane na 2 trasach 30+ km"]]}
 ];
 function vProg(){
  const log=S.get("log",[]).slice().sort((a,b)=>a.d<b.d?-1:1),cp=S.get("cp",{}),tests=S.get("tests",{});
@@ -1073,7 +1129,7 @@ function vProg(){
  h+=`</table></div><div class="card"><h2>Ustawienia</h2><label class="small mut">Data startu planu (poniedziałek tygodnia 1)</label><input type="date" id="sd" value="${esc(S.get("start","2026-11-02"))}" style="margin:6px 0 12px">
  <div class="small mut">Dane zapisują się w tej aplikacji na tym telefonie. Kopia zapasowa: skopiuj tekst i zachowaj w notatkach, przywrócisz go wklejając poniżej.</div>
  <div class="row" style="margin-top:8px"><button class="btn2" data-a="exp">Kopiuj dane</button><button class="btn2" data-a="imp">Wczytaj z pola</button></div><textarea id="bk" rows="3" style="margin-top:8px" placeholder="tu pojawi się lub wklejasz kopię"></textarea><div id="bkm" class="small mut"></div>
- <div class="small mut" style="margin-top:10px">Wersja 2.0 · protokół ${PC.code} · profil: ${PC.name}</div></div>`;
+ <div class="small mut" style="margin-top:10px">Wersja 2.1 · protokół ${PC.code} · profil: ${PC.name}</div></div>`;
  return h;
 }
 function chart(log){
@@ -1095,7 +1151,7 @@ function render(){
  document.getElementById("hsub").textContent=PC.from+"→"+PC.goal+" kg // tydz. "+String(wi.w).padStart(2,"0")+"/"+PC.weeks+" // "+PHN[wi.ph].replace("Faza ","F").replace(": "," ");
  app.innerHTML=st.tab==="today"?vToday():st.tab==="train"?vTrain():st.tab==="mob"?vMob():st.tab==="diet"?vDiet():vProg();
  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.tab===st.tab));
- figMount();mount3D();
+ figMount();
  const wf=document.getElementById("wf");
  if(wf)wf.addEventListener("submit",e=>{e.preventDefault();const kg=parseFloat(String(document.getElementById("wkg").value).replace(",","."));const dt=document.getElementById("wdt").value;if(!kg||!dt)return;const log=S.get("log",[]).filter(x=>x.d!==dt);log.push({d:dt,kg});S.set("log",log);render()});
  const sd=document.getElementById("sd");if(sd)sd.addEventListener("change",()=>{if(sd.value){S.set("start",sd.value);render()}});
