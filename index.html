@@ -239,6 +239,7 @@ function figMount(){
    if(k==="bb"){const r=p[2]||16;h+=`<ellipse data-pf="${i}" rx="${(r*.38).toFixed(1)}" ry="${r}" fill="#9c2f00" stroke="${INK}" stroke-width="1"/><line data-pb="${i}" stroke="#55544e" stroke-width="2.6" stroke-linecap="round"/><ellipse data-p="${i}" rx="${(r*.38).toFixed(1)}" ry="${r}" fill="url(#pg${id})" stroke="${INK}" stroke-width="1"/><circle data-pc="${i}" r="1.8" fill="#fff"/>`}
    else if(k==="db")h+=`<circle data-p="${i}" r="6" fill="url(#pg${id})" stroke="${INK}" stroke-width=".8"/>`;
    else if(k==="bag")h+=`<circle data-p="${i}" r="9.5" fill="url(#pg${id})" stroke="${INK}" stroke-width=".8"/>`;
+   else if(k==="mb")h+=`<circle data-p="${i}" r="8" fill="url(#pg${id})" stroke="${INK}" stroke-width=".8"/>`;
    else if(k==="pad")h+=`<circle data-p="${i}" r="4.5" fill="${ORG}"/>`;
    else if(k==="ball")h+=`<circle data-p="${i}" r="5" fill="none" stroke="${ORG}" stroke-width="2.5"/>`;
    else if(k==="cable"||k==="bbar")h+=`<line data-p="${i}" stroke="${ORG}" stroke-width="${k==="bbar"?3.5:1.6}" stroke-linecap="round"/>`});
@@ -267,12 +268,12 @@ function figLoop(now){if(!document.hidden){for(const L of LIVE)if(L.el.isConnect
 requestAnimationFrame(figLoop);
 /* ================= widok 3D (Three.js) ================= */
 const V3={reg:[],active:null,loading:false,failed:false};let V3SEQ=0;
-function fig3(v){if(!v)return "";const id="v3_"+(V3SEQ++);V3.reg.push({id,n:normFig(v)});
- return `<div class="v3d" id="${id}"><div class="figbig">${fig(v)}</div><div class="v3bar"><span class="v3lab">3D</span><button data-a="cam:side">Bok</button><button data-a="cam:iso">3/4</button><button data-a="cam:front">Przód</button><button data-a="cam:spin">Obrót</button></div></div>`}
+function fig3(v,key){if(!v)return "";const id="v3_"+(V3SEQ++);V3.reg.push({id,n:normFig(v),key});
+ return `<div class="v3d" id="${id}"><div class="figbig">${fig(v)}</div><div class="v3bar"><span class="v3lab">3D</span><button data-a="cam:side">Bok</button><button data-a="cam:iso">3/4</button><button data-a="cam:front">Przód</button><button data-a="cam:spin">Obrót</button></div>${V3.failed?`<div class="small mut">Widok 3D niedostępny w tej przeglądarce, pokazuję rysunek 2D.</div>`:""}</div>`}
 function load3D(cb){if(window.THREE)return cb();if(V3.failed)return;if(V3.loading){V3.wait=cb;return}V3.loading=true;const s=document.createElement("script");s.src="three.min.js";s.onload=()=>{V3.loading=false;cb();if(V3.wait){V3.wait=null}};s.onerror=()=>{V3.loading=false;V3.failed=true};document.head.appendChild(s)}
 function mount3D(){
  const list=V3.reg.splice(0);if(V3.active){V3.active.dispose();V3.active=null}
- const first=list.find(x=>document.getElementById(x.id));if(!first)return;
+ const ok=list.filter(x=>document.getElementById(x.id)),first=ok.find(x=>x.key&&x.key===st.last3)||ok[0];if(!first)return;
  load3D(()=>{const el=document.getElementById(first.id);if(!el||!el.isConnected)return;try{V3.active=build3D(el,first.n)}catch(e){V3.failed=true}});
 }
 function build3D(el,n){
@@ -292,10 +293,10 @@ function build3D(el,n){
  function ball(rad,mat){const m=new T.Mesh(sph,mat);m.scale.setScalar(rad);m.castShadow=true;sc.add(m);return m}
  const P3=(p,z)=>front?new T.Vector3(0,151-p[1],p[0]-100):new T.Vector3(p[0]-100,151-p[1],z||0);
  /* ciało */
- const B={torso:cap(9,mB),pel:cap(5.5,mB),sho:cap(5,mB),ua1:cap(3.4,mB),fa1:cap(2.9,mB),ua2:cap(3.4,mF),fa2:cap(2.9,mF),th1:cap(4.8,mB),sh1:cap(3.8,mB),ft1:cap(2.4,mB),th2:cap(4.8,mF),sh2:cap(3.8,mF),ft2:cap(2.4,mF),neck:cap(3,mB)};
+ const chest=new T.Mesh(sph,mB);chest.castShadow=true;sc.add(chest);const B={torso:cap(8.5,mB),pel:cap(5.5,mB),sho:cap(5,mB),ua1:cap(3.4,mB),fa1:cap(2.9,mB),ua2:cap(3.4,mF),fa2:cap(2.9,mF),th1:cap(4.8,mB),sh1:cap(3.8,mB),ft1:cap(2.4,mB),th2:cap(4.8,mF),sh2:cap(3.8,mF),ft2:cap(2.4,mF),neck:cap(3,mB)};
  const J={hd:ball(9.5,mHd),e1:ball(3.6,mJ),e2:ball(3.6,mJ),k1:ball(5,mJ),k2:ball(5,mJ),w1:ball(3.4,mB),w2:ball(3.4,mF),s1:ball(5.2,mB),s2:ball(5.2,mF),h1:ball(5.8,mB),h2:ball(5.8,mF),a1:ball(3.6,mB),a2:ball(3.6,mF)};
  /* sprzęt statyczny */
- const D=front?30:46;
+ const D=front?30:46,grip=n.pr.some(p=>p[0]==="bb"&&p[1]==="W1")?14:11;
  n.pr.forEach(p=>{const k=p[0];
   if(k==="rect"){const m=new T.Mesh(new T.BoxGeometry(front?D:p[3],p[4],front?p[3]:D),mPr);const c=P3([p[1]+p[3]/2,p[2]+p[4]/2]);m.position.copy(c);m.castShadow=m.receiveShadow=true;sc.add(m)}
   else if(k==="line"){[-14,14].forEach(z=>{const o=cap(1.8,mDk);setCap(o,P3([p[1],p[2]],z),P3([p[3],p[4]],z))})}
@@ -309,6 +310,7 @@ function build3D(el,n){
   else if(k==="bag"){o.m=new T.Mesh(new T.BoxGeometry(12,16,18),mEq);o.m.castShadow=true;sc.add(o.m)}
   else if(k==="pad"){o.c=cap(3.5,mEq)}
   else if(k==="ball"){o.m=ball(5,mEq)}
+  else if(k==="mb"){o.m=ball(8.5,mEq)}
   else if(k==="cable"||k==="bbar"){o.c=cap(k==="bbar"?1.6:.6,k==="bbar"?mSt:mEq)}
   return o});
  /* tor ruchu i oś */
@@ -319,7 +321,9 @@ function build3D(el,n){
  box.innerHTML="";box.appendChild(r.domElement);r.domElement.style.touchAction="pan-y";
  /* kamera */
  const st3={az:front?70:32,el:14,auto:true,t0:performance.now()};
- function place(){const R=370,a=st3.az*Math.PI/180,e=st3.el*Math.PI/180;cam.position.set(Math.sin(a)*Math.cos(e)*R,68+Math.sin(e)*R,Math.cos(a)*Math.cos(e)*R);cam.lookAt(0,66,0)}
+ let bx=[1e9,-1e9],by=[1e9,-1e9];for(let i=0;i<=24;i++){const F=frameAt(n,i/24);["H","S","P","W1","W2","A1","A2","K1","K2","T1","T2","E1","E2"].forEach(j=>{const q=F[j];if(!q)return;const v=P3(q);const h=front?v.z:v.x;bx[0]=Math.min(bx[0],h);bx[1]=Math.max(bx[1],h);by[0]=Math.min(by[0],v.y);by[1]=Math.max(by[1],v.y)})}
+ by[0]=Math.min(by[0],0);const cx=front?0:(bx[0]+bx[1])/2,cy=(by[0]+by[1])/2+4,ext=Math.max((by[1]-by[0])+30,(bx[1]-bx[0]+40)*H/W);const RR=clamp(ext/(2*Math.tan(17*Math.PI/180))*1.08,230,520);
+ function place(){const a=st3.az*Math.PI/180,e=st3.el*Math.PI/180;cam.position.set(cx+Math.sin(a)*Math.cos(e)*RR,cy+Math.sin(e)*RR,Math.cos(a)*Math.cos(e)*RR);cam.lookAt(cx,cy,0)}
  let drag=null;const cv=r.domElement;
  cv.addEventListener("pointerdown",e=>{drag={x:e.clientX,y:e.clientY,az:st3.az,el:st3.el};st3.auto=false;cv.setPointerCapture(e.pointerId)});
  cv.addEventListener("pointermove",e=>{if(!drag)return;st3.az=drag.az-(e.clientX-drag.x)*.5;st3.el=clamp(drag.el+(e.clientY-drag.y)*.3,-5,70)});
@@ -328,23 +332,24 @@ function build3D(el,n){
  function upd(now){
   const F=frameAt(n,phase(now,n.d));
   if(st3.auto)st3.az=(front?70:32)+Math.sin((now-st3.t0)/2600)*28;place();
-  const zs=front?0:11,zh=front?0:8;
-  const S0=P3(F.S),P0=P3(F.P),Sn=P3(F.S,zs),Sf=P3(F.S,-zs),Pn=P3(F.P,zh),Pf=P3(F.P,-zh);
+  const zs=front?0:grip,zh=front?0:8;
+  const S0=P3(F.S),P0=P3(F.P),Sn=P3(F.S,11),Sf=P3(F.S,-11),Pn=P3(F.P,zh),Pf=P3(F.P,-zh);
   let s1=Sn,s2=Sf,h1=Pn,h2=Pf;
   if(front){const sd=(a,b)=>new T.Vector3(0,0,(a[0]<b[0]?-1:1));s1=S0.clone().addScaledVector(sd(F.E1,F.S),10);s2=S0.clone().addScaledVector(sd(F.E2,F.S),10);h1=P0.clone().addScaledVector(sd(F.K1,F.P),7);h2=P0.clone().addScaledVector(sd(F.K2,F.P),7)}
   const az=front?0:1,E1=P3(F.E1,zs*az+(front?0:0)),W1=P3(F.W1,zs),E2=P3(F.E2,-zs),W2=P3(F.W2,-zs),K1=P3(F.K1,zh),A1=P3(F.A1,zh),K2=P3(F.K2,-zh),A2=P3(F.A2,-zh),T1=P3(F.T1,zh),L1=P3(F.L1,zh),T2=P3(F.T2,-zh),L2=P3(F.L2,-zh);
   if(front){[E1,W1].forEach(q=>q.z+=s1.z-S0.z);[E2,W2].forEach(q=>q.z+=s2.z-S0.z)}
   const neckTop=P3(F.H).lerp(S0,.55);
-  setCap(B.torso,P0,S0);setCap(B.pel,h1,h2);setCap(B.sho,s1,s2);setCap(B.neck,S0,neckTop);
+  setCap(B.torso,P0,S0.clone().lerp(P0,.35));{const d=new T.Vector3().subVectors(S0,P0),c=P0.clone().addScaledVector(d,.68);chest.position.copy(c);chest.scale.set(10.5,15,front?11:12.5);chest.quaternion.setFromUnitVectors(UP,d.normalize());if(front)chest.scale.set(10.5,15,12.5)}setCap(B.pel,h1,h2);setCap(B.sho,s1,s2);setCap(B.neck,S0,neckTop);
   setCap(B.ua1,s1,E1);setCap(B.fa1,E1,W1);setCap(B.ua2,s2,E2);setCap(B.fa2,E2,W2);
   setCap(B.th1,h1,K1);setCap(B.sh1,K1,A1);setCap(B.ft1,L1,T1);setCap(B.th2,h2,K2);setCap(B.sh2,K2,A2);setCap(B.ft2,L2,T2);
   J.hd.position.copy(P3(F.H));J.e1.position.copy(E1);J.e2.position.copy(E2);J.k1.position.copy(K1);J.k2.position.copy(K2);J.w1.position.copy(W1);J.w2.position.copy(W2);J.s1.position.copy(s1);J.s2.position.copy(s2);J.h1.position.copy(h1);J.h2.position.copy(h2);J.a1.position.copy(A1);J.a2.position.copy(A2);
   dyn.forEach(o=>{const p=o.p,k=p[0];
-   if(k==="bb"){const q=F[p[1]],x=q[0]+(p[3]||0),y=q[1]+(p[4]||0),c0=P3([x,y]);setCap(o.bar,c0.clone().setZ(-38),c0.clone().setZ(38));o.pl.forEach((m,i)=>{m.position.set(c0.x,c0.y,i?27:-27)})}
+   if(k==="bb"){const q=F[p[1]],x=q[0]+(p[3]||0),y=q[1]+(p[4]||0),c0=P3([x,y]);setCap(o.bar,c0.clone().setZ(-42),c0.clone().setZ(42));o.pl.forEach((m,i)=>{m.position.set(c0.x,c0.y,i?30:-30)})}
    else if(k==="db"){[[W1,1],[W2,-1]].forEach(([w,s],i)=>{const h=o.h[i],a=w.clone(),b=w.clone();if(front){a.x-=5;b.x+=5;h.pl.forEach((m,j)=>{m.rotation.z=Math.PI/2;m.position.set(w.x+(j?6:-6),w.y,w.z)})}else{a.z-=5;b.z+=5;h.pl.forEach((m,j)=>{m.rotation.x=Math.PI/2;m.position.set(w.x,w.y,w.z+(j?6:-6))})}setCap(h.bar,a,b)})}
    else if(k==="bag"){const q=P3(F[p[1]]);o.m.position.set(q.x+(p[1]==="S"?-9:0),q.y+(p[1]==="S"?-14:0),q.z)}
    else if(k==="pad"){const q=P3(F[p[1]]);setCap(o.c,q.clone().setZ(-12),q.clone().setZ(12))}
    else if(k==="ball"){const q=P3(F[p[1]],zh);o.m.position.set(q.x+4,q.y-9,q.z)}
+   else if(k==="mb"){const q=P3(F[p[1]]);o.m.position.set(q.x+3,q.y,0)}
    else if(k==="cable"){const fixed=typeof p[1]==="number",a=fixed?P3([p[1],p[2]]):P3(F[p[1]],zs),b=fixed?W1:P3(F[p[2]],zh);setCap(o.c,a,b)}
    else if(k==="bbar"){const a=P3(F[p[1]]),b=P3(F[p[2]]);const d=new T.Vector3().subVectors(b,a).normalize();setCap(o.c,a.clone().addScaledVector(d,-8),b.clone().addScaledVector(d,8))}});
   r.render(sc,cam);
@@ -565,7 +570,7 @@ chleb:["chleb żytni na zakwasie","Pieczywo","g"],tort:["tortilla pełnoziarnist
 szpinak:["szpinak świeży","Warzywa","g"],cebula:["cebula","Warzywa","szt"],czosnek:["czosnek","Warzywa","ząbek"],papryka:["papryka","Warzywa","szt"],pomidor:["pomidory","Warzywa","szt"],ogorek:["ogórek","Warzywa","szt"],rzodk:["rzodkiewka","Warzywa","pęczek"],pieczarki:["pieczarki","Warzywa","g"],ziemn:["ziemniaki","Warzywa","g"],batat:["bataty","Warzywa","g"],fasolka:["fasolka szparagowa","Warzywa","g"],salata:["sałata rzymska","Warzywa","szt"],rukola:["rukola","Warzywa","g"],marchew:["marchew","Warzywa","szt"],seler:["seler naciowy","Warzywa","łodyga"],kielki:["kiełki fasoli mung","Warzywa","g"],szczyp:["szczypiorek","Warzywa","pęczek"],koperek:["koperek","Warzywa","pęczek"],kolendra:["kolendra","Warzywa","pęczek"],imbir:["imbir świeży","Warzywa","g"],awok:["awokado","Warzywa","szt"],
 banan:["banany","Owoce","szt"],jablko:["jabłka","Owoce","szt"],mango:["mango","Owoce","szt"],limonka:["limonki","Owoce","szt"],cytryna:["cytryny","Owoce","szt"],gruszka:["gruszka","Owoce","szt"],
 edamame:["edamame mrożone","Mrożonki","g"],
-owies:["płatki owsiane","Suche i sypkie","g"],ryz:["ryż basmati","Suche i sypkie","g"],ryzs:["ryż do sushi","Suche i sypkie","g"],mak:["makaron pełnoziarnisty","Suche i sypkie","g"],makr:["makaron ryżowy","Suche i sypkie","g"],bulg:["kasza bulgur","Suche i sypkie","g"],wafle:["wafle ryżowe","Suche i sypkie","szt"],batony:["batony zbożowe","Suche i sypkie","szt"],odz:["odżywka białkowa","Suche i sypkie","g"],kreat:["kreatyna","Suche i sypkie","g"],pestki:["pestki dyni","Suche i sypkie","g"],orzz:["orzeszki ziemne","Suche i sypkie","g"],sezam:["sezam","Suche i sypkie","g"],kakao:["kakao","Suche i sypkie","g"],miod:["miód","Suche i sypkie","g"],
+owies:["płatki owsiane","Suche i sypkie","g"],ryz:["ryż basmati","Suche i sypkie","g"],ryzs:["ryż do sushi","Suche i sypkie","g"],mak:["makaron pełnoziarnisty","Suche i sypkie","g"],makr:["makaron ryżowy","Suche i sypkie","g"],bulg:["kasza bulgur","Suche i sypkie","g"],wafle:["wafle ryżowe","Suche i sypkie","szt"],odz:["odżywka białkowa","Suche i sypkie","g"],kreat:["kreatyna","Suche i sypkie","g"],pestki:["pestki dyni","Suche i sypkie","g"],orzz:["orzeszki ziemne","Suche i sypkie","g"],sezam:["sezam","Suche i sypkie","g"],kakao:["kakao","Suche i sypkie","g"],miod:["miód","Suche i sypkie","g"],
 passata:["passata","Puszki i słoiki","ml"],pomp:["pomidory krojone z puszki","Puszki i słoiki","g"],fasolac:["czerwona fasola z puszki","Puszki i słoiki","g"],fasolaz:["czarna fasola z puszki","Puszki i słoiki","g"],kukur:["kukurydza z puszki","Puszki i słoiki","g"],kimchi:["kimchi","Puszki i słoiki","g"],ogkis:["ogórki kiszone","Puszki i słoiki","g"],hummus:["hummus","Puszki i słoiki","g"],miso:["pasta miso","Puszki i słoiki","g"],harissa:["harissa","Puszki i słoiki","łyżeczka"],tamar:["pasta tamaryndowa","Puszki i słoiki","łyżka"],sosryb:["sos rybny","Puszki i słoiki","łyżka"],sossoj:["sos sojowy","Puszki i słoiki","łyżka"],majo:["majonez light","Puszki i słoiki","g"],musztarda:["musztarda","Puszki i słoiki","łyżeczka"],
 oliwa:["oliwa","Tłuszcze","g"],olej:["olej rzepakowy","Tłuszcze","g"],olejsez:["olej sezamowy","Tłuszcze","g"],
 sol:["sól","Przyprawy i zapasy",""],pieprz:["pieprz","Przyprawy i zapasy",""],kumin:["kumin","Przyprawy i zapasy",""],papwed:["papryka wędzona","Przyprawy i zapasy",""],garam:["garam masala","Przyprawy i zapasy",""],chipotle:["chipotle","Przyprawy i zapasy",""],cynamon:["cynamon","Przyprawy i zapasy",""],gozdzik:["goździki","Przyprawy i zapasy",""],gyros:["przyprawa gyros","Przyprawy i zapasy",""],majeranek:["majeranek","Przyprawy i zapasy",""],bazylia:["bazylia","Przyprawy i zapasy",""],ocetryz:["ocet ryżowy","Przyprawy i zapasy",""],wino:["czerwone wino (do sosu)","Przyprawy i zapasy",""],sriracha:["sriracha","Przyprawy i zapasy",""],kawa:["kawa","Przyprawy i zapasy",""],cukier:["cukier","Przyprawy i zapasy",""]
@@ -651,6 +656,22 @@ ipu:{n:"Pompki na podwyższeniu",d:"Dłonie na ławce lub skrzyni na szerokość
  x:["Opadające biodra: przeciąża lędźwie, ciało jak deska.","Łokcie na boki: przeciąża barki."],
  v:EX.tpd.h.v,h:{n:"Pompki o blat kuchenny",d:"Dłonie na krawędzi blatu, ciało w linii. 40 s."}}
 });
+Object.assign(EX,{
+mbs:{n:"Rzut piłką lekarską w podłogę",e:"medicine ball slam",d:"Piłka 4-6 kg bez odbicia (slam ball). Wspięcie na palce i wyprost z piłką nad głową, potem gwałtownie rzucasz ją w podłogę przed stopami, schodząc biodrami w dół jak w zawiasie. To ruch ataku w siatkówce: całe ciało od bioder przez brzuch do rąk.",c:["Każdy rzut z pełną siłą","Podnosisz piłkę z przysiadu, plecy proste","Przerwa między seriami pełna, 45-60 s"],
+ x:["Zaokrąglone plecy przy rzucie i podnoszeniu: zawias biodrowy, plecy proste.","Piłka z odbiciem może trafić w twarz: używaj piłki bez odbicia albo nie pochylaj głowy nad miejscem uderzenia."],
+ v:{k:[{f:[100,147],l1:[0,0],t:-6,a1:[178,178],to:[90,90]},{f:[100,147],l1:[55,-22],t:58,a1:[15,15],to:[90,90]}],c:{tr:"W1"},pr:[["mb","W1"]],d:1.3},
+ h:{n:"Rzut piłką lub workiem w trawę",d:"W ogrodzie piłka lekarska albo worek z piaskiem 5 kg rzucany w trawę. Bez sprzętu: 3 × 8 wyskoków z mocnym wymachem ramion."}},
+mbo:{n:"Rzut piłką lekarską zza głowy o ścianę",e:"overhead wall throw",d:"Stań 2-3 m od ściany w lekkim wykroku. Piłka 3-4 kg za głową, łokcie wysoko. Rzucasz z całego ciała: noga, biodro, brzuch, ramiona, jak przy zagrywce i ataku. Łapiesz po odbiciu i od razu kolejny rzut.",c:["Szybkość ważniejsza niż ciężar","Rzut idzie z nóg i brzucha, nie z samych rąk"],
+ x:["Przeprost lędźwi przy zamachu: brzuch napięty, wygięcie z bioder, nie z dolnych pleców.","Za ciężka piłka: przeciąża bark i łokieć, wystarczą 3-4 kg."],
+ v:{k:[{f:[95,147],l1:[-8,-8],l2:[18,0],t:-12,a1:[185,-145],to:[90,90]},{f:[95,147],l1:[-15,-15],l2:[25,-5],t:12,a1:[100,100],to:[90,90]}],c:{tr:"W1"},pr:[["line",182,-10,182,150],["mb","W1"]],d:1.2},
+ h:{n:"Rzut piłką zza głowy o ścianę garażu",d:"Na zewnątrz o ścianę garażu lub w trawę, piłka 3 kg albo cięższa piłka do koszykówki. 3 × 8."}},
+mbr:{n:"Rzut rotacyjny piłką lekarską o ścianę",e:"rotational wall throw",d:"Stań bokiem do ściany, ok. 1,5 m. Piłka 4-5 kg przy biodrze dalszym od ściany, lekki półprzysiad. Obrót zaczyna się od stóp i bioder, a ramiona tylko przekazują siłę. Rzucasz piłkę w ścianę, łapiesz i powtarzasz. Potem druga strona.",c:["Ruch z bioder i nóg","Obie strony po równo"],
+ x:["Obrót tylko z pleców przy nieruchomych biodrach: przeciąża odcinek lędźwiowy. Obrót od nóg.","Rzucanie na zmęczeniu: mało powtórzeń, pełna przerwa."],
+ v:{k:[{f:[100,147],l1:[30,-15],t:18,a1:[-55,-35],to:[90,90]},{f:[100,147],l1:[5,-5],t:0,a1:[95,105],to:[90,90]}],c:{tr:"W1"},pr:[["line",182,-10,182,150],["mb","W1"]],d:1.3},
+ h:{n:"Rzut rotacyjny o ścianę garażu",d:"Piłka 3-4 kg albo worek z piaskiem rzucany bokiem w trawę. 3 × 6 na stronę."}}
+});
+WK.D.it=WK.D.it.filter(x=>x[0]!=="rt");WK.D.it.unshift(["mbs","3 × 8","45 s"],["mbo","3 × 8","45 s"],["mbr","3 × 6 na stronę","45 s"]);
+WK.D.s="Rzuty piłką lekarską, plecy, ramiona, core";
 EX.ll.v.plane="front";EX.abd.v.plane="front";
 WK.KA={n:"Siła: całe ciało",s:"Siłownia, ok. 55 min",it:[["ht","4 × 10-12","90 s"],["gs","3 × 10-12","90 s"],["rdl","3 × 10-12","90 s"],["dbrow","3 × 10-12 na rękę","60 s"],["idb","3 × 10-12","60 s"],["latpd","3 × 10-12","60 s"],["bss","2 × 10 na nogę","60 s"],["abd","2 × 15 kroków w stronę","45 s"],["plank","3 × 30-40 s","30 s"]]};
 WK.KB={n:"Trening obwodowy",s:"4 rundy: 40 s pracy, 20 s przerwy, 2 min między rundami",it:[["kbs","4 rundy × 40 s","20 s"],["wl","4 rundy × 40 s","20 s"],["ipu","4 rundy × 40 s","20 s"],["dbrow","4 rundy × 40 s","20 s"],["su","4 rundy × 40 s","20 s"],["mc","4 rundy × 30 s","20 s"],["plank","4 rundy × 30 s","2 min"]]};
@@ -748,6 +769,21 @@ function groupsOf(id){const ps=M[id].q.map(q=>q[0]);return Object.keys(GRP).filt
 function isDairyFree(id){return !M[id].q.some(q=>DAIRY.includes(q[0]))}
 function promoFor(id){const ps=M[id].q.map(q=>q[0]);return activePromos().filter(x=>ps.includes(x.p))}
 
+/* ================= suplementy i produkty naturalne (v1.9) ================= */
+Object.assign(PR,{odz:["izolat białka serwatki (WPI)","Suplementy","g"],izog:["izolat białka grochu","Suplementy","g"],kreat:["kreatyna (monohydrat)","Suplementy","g"],cynk:["cynk 10 mg (tabletki)","Suplementy","szt"],magn:["magnez 300 mg (tabletki)","Suplementy","szt"],hummus:["hummus (najlepiej domowy)","Puszki i słoiki","g"]});
+CATS.push("Suplementy");
+const SUPP={m:{kreat:15,cynk:1,magn:1},k:{kreat:10,cynk:1,magn:1}};
+Object.assign(M.pre,{n:"Banan i kawa z mlekiem",q:[["banan",1],["mleko",100],["kawa",0]],st:["Banan i kawa 15-20 min przed wyjściem.","Wypij 300-500 ml wody."]});
+Object.assign(M.tr,{n:"Banan i bułka z miodem",kcal:345,p:7,zn:.9,k:520,na:300,q:[["banan",1],["bulka",1],["miod",20]],st:["Bułkę przekrój i posmaruj miodem, zawiń w papier.","Jedz co 45-60 min wysiłku."]});
+Object.assign(M.pc,{n:"Banan, kefir i pół bułki z miodem",q:[["banan",1],["kefir",250],["bulka",.5],["miod",15]],st:["Zjedz w ciągu 30-60 min po biegu lub rowerze: węglowodany odbudowują glikogen na jutrzejszy trening.","Kefir dodaje potasu, sodu i trochę białka."]});
+M.se.q=M.se.q.map(x=>x[0]==="wafle"?["chleb",40]:x);M.se.st=M.se.st.map(x=>x.replace("waflami","chlebem żytnim"));
+M.po.q=M.po.q.map(x=>x[0]==="majo"?["jog",30]:x);M.po.n="Poke z tuńczykiem i mango";M.po.st=M.po.st.map(x=>x.replace("majonez ze srirachą","jogurt grecki ze srirachą"));M.po.ing=null;
+Object.assign(M.ks5,{n:"Pasta z tuńczyka na chlebie żytnim",kcal:215,p:23,q:[["tun",80],["chleb",40],["ogkis",30],["oliwa",3],["szczyp",.25]],st:["Tuńczyka rozgnieć z oliwą, posiekanym ogórkiem i szczypiorkiem.","Nałóż na chleb."]});
+M.kiso=KM({c:"Przekąska",n:"Koktajl z izolatem białka, malinami i bananem",t:2,kcal:215,p:25,tg:["białko","potas","wit. C"],q:[["izog",25],["maliny",80],["banan",.5]],st:["Izolat, maliny, pół banana, 250 ml wody i lód: zblenduj.","Najlepiej do 1-2 h po treningu. Izolat grochu albo serwatki (WPI) zawiera praktycznie zero laktozy, w smaku nie przypomina nabiału."]});
+K_ROT[2].m[3]=["16:30","kiso"];K_ROT[4].m[3]=["16:30","kiso"];K_ROT[6].m[3]=["17:00","kiso"];
+/* bez białek z kartonu: białka ze świeżych jajek */
+PR.bial=["białka ze świeżych jajek","Nabiał i jajka","szt"];
+Object.values(M).forEach(m=>{m.q=m.q.map(([p,q])=>p==="bial"?["bial",Math.max(1,Math.round(q/33))]:[p,q]);m.st=m.st.map(x=>x.replace(/białka z kartonu|białkami/g,y=>y==="białkami"?"białkami (oddziel je od żółtek)":"białka ze świeżych jajek"))});
 const M_CFG={};
 let PC=PROF.m;
 function applyProfile(id){PID=id;PC=PROF[id];
@@ -796,6 +832,9 @@ function todayItemsK(d){
  ROT[g].m.forEach(([t],i)=>{const id=mealAt(g,i);items.push({t,id:"m"+i,n:M[id].n,s:M[id].c+" · "+M[id].kcal+" kcal · "+M[id].p+" g białka",go:"rec:"+id})});
  items.push({t:"cały dzień",id:"steps",n:"8 tys. kroków",s:"Spacer, schody, rower"});
  items.push({t:"cały dzień",id:"water",n:PC.water,s:"Zielona herbata lub napar z imbiru się liczą"});
+ items.push({t:"z posiłkami",id:"krea",n:"Kreatyna 10 g",s:"2 × 5 g: przy śniadaniu i obiedzie, z dużą ilością wody"});
+ items.push({t:"19:30",id:"zn",n:"Cynk 10 mg",s:"Do kolacji, nie razem z żelazem"});
+ items.push({t:"21:30",id:"mag",n:"Magnez 300 mg",s:"Wieczorem"});
  items.push({t:"23:00",id:"sleep",n:"Sen 7-8 h",s:"Regeneracja i hormony głodu"});
  if(wkInfo(d).test&&WK[key])items.push({t:"trening",id:"rmtest",n:"Test ciężaru w ćwiczeniach z obciążeniem",s:"Tydzień testów",go:"train:"+key});
  items.sort((a,b)=>tmin(a.t)-tmin(b.t));return items;
@@ -813,6 +852,8 @@ function todayItems(d){if(PID==="k")return todayItemsK(d);
  if(g===2)items.push({t:"19:15",id:"vb",n:"Siatkówka",s:"1,5 h, elektrolity w trakcie"});
  if(g===2||g===0)items.push({t:g===2?"21:30":"20:00",id:"eve",n:"Rozciąganie wieczorne",s:"15-20 min",go:"mob:eve"});
  items.push({t:"cały dzień",id:"water",n:PC.water,s:"Dodatkowo elektrolity przy dużym wysiłku"});
+ items.push({t:"z posiłkami",id:"krea",n:"Kreatyna 15 g",s:"3 × 5 g: przy śniadaniu, obiedzie i kolacji, z dużą ilością wody"});
+ items.push({t:"19:30",id:"zn",n:"Cynk 10 mg",s:"Do kolacji. W dni z wołowiną lub wątróbką możesz pominąć"});
  items.push({t:"21:30",id:"mag",n:"Magnez 300 mg",s:"Wieczorem z wodą"});
  items.push({t:"22:30",id:"sleep",n:"Światło zgaszone",s:"7-8 h snu przy pobudce o 5:40"});
  if(wkInfo(d).test&&WK[key])items.push({t:"trening",id:"rmtest",n:"Test ciężaru w ćwiczeniach z obciążeniem",s:"Tydzień testów: w pierwszej serii roboczej każdego ćwiczenia",go:"train:"+key});
@@ -862,7 +903,7 @@ function exCard(key,idx,row,ds,mode){
  h+=`</div>${mode==="home"&&e.h?"":loadBlock(id,dose,key)}<div class="wt"><input data-w="${wkey}" value="${esc(wv)}" placeholder="ciężar × powt., np. 80 × 5"></div>`;
  h+=`<button class="more" data-a="op:${ok}">${open?"Zwiń opis":"Jak wykonać"}</button>`;
  if(open){
-  h+=`<div class="det">${fig3(vis)}${!alt&&e.fv?`<div class="figbig">${fig(e.fv)}</div>`:""}${e.x?`<div class="warnl"><b>Tego unikaj: ryzyko kontuzji</b><ul>${e.x.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`:""}`;
+  h+=`<div class="det">${fig3(vis,ok)}${!alt&&e.fv?`<div class="figbig">${fig(e.fv)}</div>`:""}${e.x?`<div class="warnl"><b>Tego unikaj: ryzyko kontuzji</b><ul>${e.x.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`:""}`;
   if(alt)h+=`<p>${esc(e.h.d)}</p><div class="alt"><b>Na siłowni:</b> ${esc(e.n)}</div></div>`;
   else h+=`<p>${esc(e.d)}</p><ul>${e.c.map(c=>`<li>${esc(c)}</li>`).join("")}</ul>${e.h?`<div class="alt"><b>W domu:</b> ${esc(e.h.n)}. ${esc(e.h.d)}</div>`:""}</div>`;
  }
@@ -898,16 +939,18 @@ function vMob(){
  Object.keys(MOB).forEach(k=>h+=`<button class="chip ${k===cur?"on":""}" data-a="mob:${k}">${MOB[k].n}</button>`);
  const r=MOB[cur];
  h+=`</div><div class="card"><h2>${esc(r.n)}</h2><div class="small mut">${esc(r.s)}</div></div><div class="card">`;
- r.it.forEach((x,i)=>{const id="mob_"+cur+"_"+i;h+=`<div class="ex"><div class="exh"><button class="ck ${isOn(ds,id)?"on":""}" data-a="ck:${id}" style="margin-top:2px"></button><div class="exn"><b>${esc(x.n)}${x.e?` <i class="mut small" style="font-weight:400">(${esc(x.e)})</i>`:""}</b><div class="small" style="color:var(--acc2)">${esc(x.dose)}</div>${x.hold?`<div style="margin-top:6px"><button class="tbtn" data-a="tm:${x.hold}:${esc(x.n)}">Minutnik ${x.hold} s</button></div>`:""}</div><div class="figw">${fig(x.v)}</div></div><div class="small mut" style="margin:8px 0 0 38px">${esc(x.d)}</div></div>`});
+ r.it.forEach((x,i)=>{const id="mob_"+cur+"_"+i;h+=`<div class="ex"><div class="exh"><button class="ck ${isOn(ds,id)?"on":""}" data-a="ck:${id}" style="margin-top:2px"></button><div class="exn"><b>${esc(x.n)}${x.e?` <i class="mut small" style="font-weight:400">(${esc(x.e)})</i>`:""}</b><div class="small" style="color:var(--acc2)">${esc(x.dose)}</div>${x.hold?`<div style="margin-top:6px"><button class="tbtn" data-a="tm:${x.hold}:${esc(x.n)}">Minutnik ${x.hold} s</button></div>`:""}</div><div class="figw" data-a="op:m3_${id}">${fig(x.v)}</div></div><div class="small mut" style="margin:8px 0 0 38px">${esc(x.d)}</div><button class="more" data-a="op:m3_${id}">${st.open["m3_"+id]?"Zamknij 3D":"Pokaż w 3D"}</button>${st.open["m3_"+id]?`<div class="det">${fig3(x.v,"m3_"+id)}</div>`:""}</div>`});
  return h+"</div>";
 }
 
 /* ================= widok: Dieta ================= */
 const fq=q=>{const w=Math.floor(q+1e-9),f=q-w;const fr=Math.abs(f-.25)<.02?"1/4":Math.abs(f-.33)<.02?"1/3":Math.abs(f-.5)<.02?"1/2":Math.abs(f-.75)<.02?"3/4":f>0.01?String(Math.round(f*100)/100).replace(".",","):"";return (w?w+(fr?" ":""):"")+fr||"0"};
+const DRY=["ryz","ryzs","ryzbr","mak","makr","kgryk","bulg","komosa","owies"],RAW=["kurczak","indyk","indykm","wol","wolm","poledw","losos","dorsz","pstrag","watrob","krew"];
+const WRULE=`<p class="small mut" style="margin:4px 0">Zasada wag: ryż, makaron, kasze, komosa i płatki ważysz <b>przed ugotowaniem (na sucho)</b>, mięso i ryby <b>na surowo</b>. Po ugotowaniu ryż i kasze ważą ok. 2,5-3 razy więcej, makaron ok. 2,2-2,5 razy, mięso traci ok. 25%.</p>`;
 function recipe(id){
  const m=M[id];
- const ing=m.q.map(([p,q])=>{const pr=PR[p];return `<span>${esc(pr[0])}</span><span>${q?fq(q)+" "+UN[pr[2]]:"do smaku"}</span>`}).join("");
- return `<div class="det" style="margin-left:0">${m.q.length?`<div class="ing">${ing}</div>`:""}<ol>${m.st.map(s=>`<li>${esc(s)}</li>`).join("")}</ol>${m.t?`<p class="small mut">Czas: ok. ${m.t} min · ${m.kcal} kcal · ${m.p} g białka${m.tg?" · "+m.tg.join(", "):` · cynk ${pl(m.zn)} mg · potas ${pl(m.k/1000)} g · sód ${pl(m.na/1000)} g`}</p>`:""}</div>`;
+ const ing=m.q.map(([p,q])=>{const pr=PR[p];return `<span>${esc(pr[0])}${DRY.includes(p)?" <i class=\"mut\">(na sucho)</i>":RAW.includes(p)?" <i class=\"mut\">(surowe)</i>":""}</span><span>${q?fq(q)+" "+UN[pr[2]]:"do smaku"}</span>`}).join("");
+ return `<div class="det" style="margin-left:0">${m.q.length?`<div class="ing">${ing}</div>`+(m.q.some(([p])=>DRY.includes(p)||RAW.includes(p))?WRULE:""):""}<ol>${m.st.map(s=>`<li>${esc(s)}</li>`).join("")}</ol>${m.t?`<p class="small mut">Czas: ok. ${m.t} min · ${m.kcal} kcal · ${m.p} g białka${m.tg?" · "+m.tg.join(", "):` · cynk ${pl(m.zn)} mg · potas ${pl(m.k/1000)} g · sód ${pl(m.na/1000)} g`}</p>`:""}</div>`;
 }
 function sumDay(g){const t={kcal:0,p:0,zn:0,k:0,na:0};ROT[g].m.forEach((x,i)=>{const id=mealAt(g,i);for(const k in t)t[k]+=M[id][k]||0});return t}
 function mbar(v,max,col){return `<div class="mbar"><i style="width:${Math.min(100,v/max*100)}%;background:${col}"></i></div>`}
@@ -938,6 +981,7 @@ function vDiet(){
   <div class="row" style="gap:14px"><button class="more" style="padding-left:0" data-a="op:${ok}">${open?"Zwiń":"Przepis"}</button>${alts.length?`<button class="more" style="padding-left:0" data-a="op:${sk}">${st.open[sk]?"Zamknij wybór":"Zmień ("+alts.length+" opcji)"}</button>`:""}</div>
   ${st.open[sk]?`<div class="det" style="margin-left:0">${alts.map(a=>{const am=M[a],ap=promoFor(a),gs=groupsOf(a);return `<div class="item"><div class="itx"><b>${esc(am.n)}</b><div class="small mut">${am.kcal} kcal · ${am.p} g białka${gs.length?" · "+gs.map(x=>GRPN[x]).join(", "):""}</div>${ap.length?`<div class="small" style="color:var(--acc);font-weight:600">PROMO ${ap.map(x=>esc(x.store)+" "+esc(x.price)).join(", ")}</div>`:""}</div><button class="go" data-a="pick:${g}-${i}:${a}">Wybierz</button></div>`}).join("")}${rawSel(PID)[g+"-"+i]?`<button class="btn2" data-a="pick:${g}-${i}:" style="margin-top:6px">Przywróć domyślne</button>`:""}</div>`:""}
   ${open?recipe(id):""}</div>`});
+ h+=suppCard();
  if(PC.nutri==="b"){h+=`</div><div class="card"><h2>Dieta przeciwzapalna</h2><p class="small">Ryby tłuste 3-4 razy w tygodniu (łosoś, makrela), oliwa, orzechy włoskie, siemię i chia jako omega-3. Codziennie warzywa liściaste, jagody, kurkuma z pieprzem, imbir, kasze i rośliny strączkowe, kefir. Ograniczone: cukier, słodkie napoje, wędliny, smażenie w głębokim tłuszczu, alkohol.</p></div>
  <div class="card"><h2>Witaminy z grupy B</h2><p class="small"><b>B12:</b> ryby, jajka, skyr, kefir. <b>Kwas foliowy:</b> szpinak, rukola, ciecierzyca, awokado, buraki. <b>B6 i B3:</b> kurczak, indyk, łosoś, tuńczyk. <b>B1:</b> płatki owsiane, kasza gryczana, słonecznik. <b>B2:</b> nabiał, migdały, pieczarki. <b>Biotyna (B7):</b> jajka, orzechy, nasiona, łosoś. Jadłospis pokrywa wszystkie codziennie. Suplement warto dobrać po badaniu B12, ferrytyny i witaminy D, nie w ciemno.</p></div>
  <div class="card"><h2>Keratyna: włosy, skóra, paznokcie</h2><p class="small">Keratynę organizm buduje sam z białka, głównie z aminokwasów siarkowych (jajka, ryby, drób, nabiał). Potrzebuje do tego biotyny, cynku (pestki dyni), żelaza i witaminy C (papryka, jagody, natka). Dlatego białko jest tu na poziomie 110-120 g. Suplementy z samą keratyną mają słabe dowody działania. Jeśli chodziło o kreatynę: 3 g dziennie jest bezpieczne i pomaga w treningu siłowym.</p></div>`;return h}
@@ -947,11 +991,16 @@ function vDiet(){
  <p class="small"><b class="t-na">Sód:</b> sól do smaku w każdym posiłku, ogórki kiszone, kimchi, feta, sos sojowy i rybny, domowe elektrolity we wtorek i sobotę. Przy siatkówce tracisz z potem ok. 1 g sodu na litr. Duża podaż sodu ma sens przy normalnym ciśnieniu: zmierz je na starcie.</p></div>`;
  return h;
 }
+function suppCard(){const k=PID==="k";return `</div><div class="card"><h2>Suplementy</h2>
+ <p class="small"><b>Kreatyna (monohydrat): ${k?"10 g (2 × 5 g)":"15 g (3 × 5 g)"} dziennie</b>, także w dni wolne, z posiłkami i wodą. Uwaga: badania nie pokazują dodatkowej korzyści powyżej ok. 0,1 g na kg masy ciała po nasyceniu mięśni (${k?"ok. 6-7 g":"ok. 12 g"}). Większa dawka częściej daje kłopoty żołądkowe i zatrzymuje wodę, więc waga może być wyższa o 1-2 kg. Kreatyna podnosi też wynik kreatyniny we krwi, więc przy badaniach powiedz lekarzowi, że ją bierzesz.</p>
+ <p class="small"><b>Białko: izolat, nie koncentrat.</b> ${k?"U Ciebie izolat białka grochu albo izolat serwatki (WPI): oba mają praktycznie zero laktozy i nie smakują jak nabiał. Koktajl jest we wtorki, czwartki i soboty po treningu.":"Izolat białka serwatki (WPI): min. 85-90% białka, bez dodatku cukru i bez słodzików z listą E, np. Olimp Pure Whey Isolate, OstroVit WPI, MyProtein Impact Whey Isolate. Jest w owsiankach i koktajlach z jadłospisu."}</p>
+ <p class="small"><b>Cynk 10 mg</b> (cytrynian lub glukonian) do kolacji. ${k?"Twoja dieta bez nabiału daje ok. 8-10 mg cynku, więc suplement wyrównuje do bezpiecznych 18-20 mg.":"Jadłospis daje już 15-30 mg; z suplementem pilnuj, by nie przekraczać 40 mg dziennie, bo nadmiar cynku blokuje wchłanianie miedzi. W dni z wołowiną lub wątróbką możesz go pominąć."}</p>
+ <p class="small"><b>Magnez 300 mg</b> wieczorem.</p><p class="small mut">Bez batonów i produktów przetworzonych: na trasę i po cardio jest bułka z miodem, banan i kefir.</p>`}
 function vRecipes(){
  const f=st.mf||"all",F=[["all","Wszystkie"],["Śniadanie","Śniadania"],["Obiad","Obiady"],["Kolacja","Kolacje"],["Przekąska","Przekąski"],["ryba","Ryby"],["wolowina","Wołowina"],["drob","Drób"],["watrobka","Wątróbka"],["promo","W promocji"]];
  let h=`<div class="chips">${F.map(([k,l])=>`<button class="chip ${f===k?"on":""}" data-a="mf:${k}">${l}</button>`).join("")}</div>`;
  const ids=Object.keys(M).filter(id=>(M[id].pf||"m")===PID).filter(id=>f==="all"||M[id].c===f||groupsOf(id).includes(f)||(f==="promo"&&promoFor(id).length));
- h+=`<div class="card"><h2>Menu: ${ids.length} ${ids.length===1?"danie":"dań"}</h2><p class="small mut" style="margin:2px 0 6px">${PID==="k"?"Wszystkie dania Kingi są bez nabiału. ":""}Każde danie z jadłospisu wymienisz na inne z tej samej grupy przyciskiem „Zmień” w zakładce Jadłospis.</p>`;
+ h+=`<div class="card"><h2>Menu: ${ids.length} ${ids.length===1?"danie":"dań"}</h2><p class="small mut" style="margin:2px 0 6px">${PID==="k"?"Wszystkie dania Kingi są bez nabiału. ":""}Każde danie z jadłospisu wymienisz na inne z tej samej grupy przyciskiem „Zmień” w zakładce Jadłospis.</p>${WRULE}`;
  ids.sort((a,b)=>SWAP.indexOf(M[a].c)-SWAP.indexOf(M[b].c)).forEach(id=>{const m=M[id],ok="rc_"+id,open=st.open[ok],gs=groupsOf(id),pr=promoFor(id);
   h+=`<div class="meal" id="r-${id}"><div class="mh"><div><div class="lab">${esc(m.c)}${m.t?" · ok. "+m.t+" min":""}</div><b>${esc(m.n)}</b></div><div class="mac"><b>${m.kcal}</b> kcal<br>${m.p} g B</div></div>
   <div class="tags">${gs.map(x=>`<span class="pill">${GRPN[x]}</span>`).join("")}${isDairyFree(id)?`<span class="pill">bez nabiału</span>`:""}${pr.map(x=>`<span class="pill warn">promo ${esc(x.store)}</span>`).join("")}</div>${mealTags(m)}
@@ -969,7 +1018,7 @@ function shopCompute(){
  const who=st.shopWho||PID,pids=who==="both"?["m","k"]:[who];
  const base=new Date();base.setHours(12,0,0,0);base.setDate(base.getDate()+st.shopFrom);
  const tot={},days=[];
- for(let i=0;i<st.shopN;i++){const d=new Date(base);d.setDate(base.getDate()+i);days.push(d);const g=d.getDay();pids.forEach(pid=>(pid==="k"?K_ROT:M_CFG.ROT)[g].m.forEach((x,i)=>M[mealAt(g,i,pid)].q.forEach(([p,q])=>{tot[p]=(tot[p]||0)+q})))}
+ for(let i=0;i<st.shopN;i++){const d=new Date(base);d.setDate(base.getDate()+i);days.push(d);const g=d.getDay();pids.forEach(pid=>{for(const k in SUPP[pid])tot[k]=(tot[k]||0)+SUPP[pid][k]});pids.forEach(pid=>(pid==="k"?K_ROT:M_CFG.ROT)[g].m.forEach((x,i)=>M[mealAt(g,i,pid)].q.forEach(([p,q])=>{const pp=p==="bial"?"jaj":p;tot[pp]=(tot[pp]||0)+q})))}
  return{tot,days};
 }
 function rq(q,u){if(u==="g"||u==="ml"){const v=q<100?Math.ceil(q/10)*10:Math.ceil(q/50)*50;return v>=1000?pl(v/1000).replace(",0","")+(u==="g"?" kg":" l"):v+" "+u}return Math.ceil(q-0.02)+" "+UN[u]}
@@ -1021,7 +1070,7 @@ function vProg(){
  h+=`</table></div><div class="card"><h2>Ustawienia</h2><label class="small mut">Data startu planu (poniedziałek tygodnia 1)</label><input type="date" id="sd" value="${esc(S.get("start","2026-11-02"))}" style="margin:6px 0 12px">
  <div class="small mut">Dane zapisują się w tej aplikacji na tym telefonie. Kopia zapasowa: skopiuj tekst i zachowaj w notatkach, przywrócisz go wklejając poniżej.</div>
  <div class="row" style="margin-top:8px"><button class="btn2" data-a="exp">Kopiuj dane</button><button class="btn2" data-a="imp">Wczytaj z pola</button></div><textarea id="bk" rows="3" style="margin-top:8px" placeholder="tu pojawi się lub wklejasz kopię"></textarea><div id="bkm" class="small mut"></div>
- <div class="small mut" style="margin-top:10px">Wersja 1.8 · protokół ${PC.code} · profil: ${PC.name}</div></div>`;
+ <div class="small mut" style="margin-top:10px">Wersja 1.9 · protokół ${PC.code} · profil: ${PC.name}</div></div>`;
  return h;
 }
 function chart(log){
@@ -1066,7 +1115,7 @@ document.getElementById("app").addEventListener("click",e=>{
  else if(k==="mob"){st.mob=v}
  else if(k==="dd"){st.dd=+v}
  else if(k==="dv"){st.dv=v}
- else if(k==="op"){st.open[v]=!st.open[v]}
+ else if(k==="op"){st.open[v]=!st.open[v];if(st.open[v])st.last3=v}
  else if(k==="sn"){st.shopN=+v}
  else if(k==="sf"){st.shopFrom=+v}
  else if(k==="sw"){st.shopWho=v}
