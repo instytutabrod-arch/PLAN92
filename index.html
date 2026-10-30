@@ -132,6 +132,7 @@ a{color:var(--acc2)}
 .kpi div{padding:8px;border-right:1px solid var(--line)}.kpi div:last-child{border-right:0}
 .kpi .lab{font-size:9.5px}.kpi b{font:700 18px var(--mono);display:block}
 .warnl{border:1px solid var(--na);background:#fff5f3;padding:8px 10px;margin-top:10px;font-size:13.5px}.warnl b{font:700 11px var(--mono);color:var(--na);text-transform:uppercase;letter-spacing:.5px}.warnl b::before{content:"⚠ "}.warnl ul{margin:6px 0 0;padding-left:18px}
+.v3d{position:relative;margin:8px 0}.v3d .figbig{margin:0}.v3d canvas{display:block;width:100%;height:290px}.v3bar{display:flex;gap:5px;align-items:center;margin-top:5px}.v3bar button{background:#fff;border:1px solid var(--ink);border-radius:2px;padding:5px 9px;font:500 11px var(--mono);text-transform:uppercase}.v3lab{font:700 10px var(--mono);color:#fff;background:var(--acc);padding:3px 6px;margin-right:auto}
 </style>
 </head>
 <body>
@@ -205,7 +206,7 @@ function lerpSpec(a,b,f){
  for(const k in b)if(o[k]===undefined)o[k]=b[k];
  return o;
 }
-function normFig(v){return{k:v.k||[v.A,v.B],c:v.c||{},d:v.d||3,pr:v.pr||[],nf:v.nf,lab:v.lab}}
+function normFig(v){return{k:v.k||[v.A,v.B],c:v.c||{},d:v.d||3,pr:v.pr||[],nf:v.nf,lab:v.lab,plane:v.plane}}
 function frameAt(n,u){const ks=n.k,m=ks.length-1,x=clamp(u,0,1)*m,i=Math.min(Math.floor(x),m-1),f=x-i;return pose(lerpSpec(ks[i],ks[i+1],f),n.c)}
 const ease=x=>x<.5?2*x*x:1-Math.pow(-2*x+2,2)/2;
 function phase(now,d){const p=(now/1000/d)%2,q=p<1?p:2-p;return ease(clamp((q-.08)/.84,0,1))}
@@ -262,13 +263,100 @@ function drawFig(L,now){
   else{const q=J[p[1]],dx=p[3]||0,dy=k==="ball"?9:(p[4]||0),x=q[0]+dx,y=q[1]+dy;sa(e,{cx:x,cy:y});if(ec)sa(ec,{cx:x,cy:y});
    if(k==="bb"){const pi=L.n.pr.indexOf(p),[pf,pb]=L.pfs[pi];if(pf)sa(pf,{cx:x+9,cy:y-6});if(pb)sa(pb,{x1:x+12,y1:y-8,x2:x-4,y2:y+2.5})}}});
 }
-function figLoop(now){if(!document.hidden)for(const L of LIVE)if(L.el.isConnected)drawFig(L,now);requestAnimationFrame(figLoop)}
+function figLoop(now){if(!document.hidden){for(const L of LIVE)if(L.el.isConnected)drawFig(L,now);if(V3.active&&V3.active.el.isConnected)try{V3.active.upd(now)}catch(e){}}requestAnimationFrame(figLoop)}
 requestAnimationFrame(figLoop);
+/* ================= widok 3D (Three.js) ================= */
+const V3={reg:[],active:null,loading:false,failed:false};let V3SEQ=0;
+function fig3(v){if(!v)return "";const id="v3_"+(V3SEQ++);V3.reg.push({id,n:normFig(v)});
+ return `<div class="v3d" id="${id}"><div class="figbig">${fig(v)}</div><div class="v3bar"><span class="v3lab">3D</span><button data-a="cam:side">Bok</button><button data-a="cam:iso">3/4</button><button data-a="cam:front">Przód</button><button data-a="cam:spin">Obrót</button></div></div>`}
+function load3D(cb){if(window.THREE)return cb();if(V3.failed)return;if(V3.loading){V3.wait=cb;return}V3.loading=true;const s=document.createElement("script");s.src="three.min.js";s.onload=()=>{V3.loading=false;cb();if(V3.wait){V3.wait=null}};s.onerror=()=>{V3.loading=false;V3.failed=true};document.head.appendChild(s)}
+function mount3D(){
+ const list=V3.reg.splice(0);if(V3.active){V3.active.dispose();V3.active=null}
+ const first=list.find(x=>document.getElementById(x.id));if(!first)return;
+ load3D(()=>{const el=document.getElementById(first.id);if(!el||!el.isConnected)return;try{V3.active=build3D(el,first.n)}catch(e){V3.failed=true}});
+}
+function build3D(el,n){
+ const T=THREE,box=el.querySelector(".figbig"),W=box.clientWidth||320,H=290;
+ const front=!!n.k[0].raw||n.plane==="front";
+ const r=new T.WebGLRenderer({antialias:true});r.setPixelRatio(Math.min(devicePixelRatio||1,2));r.setSize(W,H);r.shadowMap.enabled=true;r.shadowMap.type=T.PCFSoftShadowMap;
+ const sc=new T.Scene();sc.background=new T.Color(0xf7f6f1);sc.fog=new T.Fog(0xf7f6f1,420,900);
+ const cam=new T.PerspectiveCamera(34,W/H,1,3000);
+ sc.add(new T.HemisphereLight(0xffffff,0xb9b8af,.85));const dl=new T.DirectionalLight(0xffffff,.75);dl.position.set(120,260,160);dl.castShadow=true;dl.shadow.mapSize.set(1024,1024);Object.assign(dl.shadow.camera,{left:-150,right:150,top:150,bottom:-150,near:10,far:700});sc.add(dl);
+ const fl=new T.Mesh(new T.PlaneGeometry(700,700),new T.MeshStandardMaterial({color:0xe9e8e0,roughness:1}));fl.rotation.x=-Math.PI/2;fl.receiveShadow=true;if(!n.nf)sc.add(fl);
+ const gr=new T.GridHelper(700,70,0xc6c5bc,0xdad9d0);gr.position.y=.2;if(!n.nf)sc.add(gr);
+ const M=(c,o)=>new T.MeshStandardMaterial(Object.assign({color:c,roughness:.55,metalness:.05},o||{}));
+ const mB=M(0x2d2d2a),mF=M(0x4a4944),mJ=M(0xff4d00,{roughness:.4}),mHd=M(0xefeee7),mEq=M(0xff4d00,{roughness:.35,metalness:.2}),mSt=M(0xb8b8b4,{metalness:.7,roughness:.3}),mPr=M(0xdcdbd2),mDk=M(0x8b8a82);
+ const UP=new T.Vector3(0,1,0),cyl=new T.CylinderGeometry(1,1,1,14),sph=new T.SphereGeometry(1,18,14);
+ const caps=[];function cap(rad,mat){const m=new T.Mesh(cyl,mat);m.castShadow=true;sc.add(m);const o={m,rad};caps.push(o);return o}
+ function setCap(o,a,b){const d=new T.Vector3().subVectors(b,a),L=d.length()||.001;o.m.position.copy(a).addScaledVector(d,.5);o.m.scale.set(o.rad,L,o.rad);o.m.quaternion.setFromUnitVectors(UP,d.normalize())}
+ function ball(rad,mat){const m=new T.Mesh(sph,mat);m.scale.setScalar(rad);m.castShadow=true;sc.add(m);return m}
+ const P3=(p,z)=>front?new T.Vector3(0,151-p[1],p[0]-100):new T.Vector3(p[0]-100,151-p[1],z||0);
+ /* ciało */
+ const B={torso:cap(9,mB),pel:cap(5.5,mB),sho:cap(5,mB),ua1:cap(3.4,mB),fa1:cap(2.9,mB),ua2:cap(3.4,mF),fa2:cap(2.9,mF),th1:cap(4.8,mB),sh1:cap(3.8,mB),ft1:cap(2.4,mB),th2:cap(4.8,mF),sh2:cap(3.8,mF),ft2:cap(2.4,mF),neck:cap(3,mB)};
+ const J={hd:ball(9.5,mHd),e1:ball(3.6,mJ),e2:ball(3.6,mJ),k1:ball(5,mJ),k2:ball(5,mJ),w1:ball(3.4,mB),w2:ball(3.4,mF),s1:ball(5.2,mB),s2:ball(5.2,mF),h1:ball(5.8,mB),h2:ball(5.8,mF),a1:ball(3.6,mB),a2:ball(3.6,mF)};
+ /* sprzęt statyczny */
+ const D=front?30:46;
+ n.pr.forEach(p=>{const k=p[0];
+  if(k==="rect"){const m=new T.Mesh(new T.BoxGeometry(front?D:p[3],p[4],front?p[3]:D),mPr);const c=P3([p[1]+p[3]/2,p[2]+p[4]/2]);m.position.copy(c);m.castShadow=m.receiveShadow=true;sc.add(m)}
+  else if(k==="line"){[-14,14].forEach(z=>{const o=cap(1.8,mDk);setCap(o,P3([p[1],p[2]],z),P3([p[3],p[4]],z))})}
+  else if(k==="bar"){const o=cap(1.6,mSt);const x=(p[1]+p[2])/2;setCap(o,P3([x,p[3]],-45),P3([x,p[3]],45))}
+  else if(k==="circ"){const m=new T.Mesh(new T.TorusGeometry(p[3],1.8,8,40),mDk);m.position.copy(P3([p[1],p[2]]));sc.add(m);[-1,1].forEach(()=>{})}
+ });
+ /* sprzęt ruchomy */
+ const dyn=n.pr.map(p=>{const k=p[0],o={p};
+  if(k==="bb"){const rr=p[2]||16;o.bar=cap(1.4,mSt);o.pl=[-1,1].map(()=>{const m=new T.Mesh(new T.CylinderGeometry(rr,rr,5,28),mEq);m.rotation.x=Math.PI/2;m.castShadow=true;sc.add(m);return m})}
+  else if(k==="db"){o.h=[0,1].map(()=>({bar:cap(1.3,mSt),pl:[0,1].map(()=>{const m=new T.Mesh(new T.CylinderGeometry(5,5,4,18),mEq);m.castShadow=true;sc.add(m);return m})}))}
+  else if(k==="bag"){o.m=new T.Mesh(new T.BoxGeometry(12,16,18),mEq);o.m.castShadow=true;sc.add(o.m)}
+  else if(k==="pad"){o.c=cap(3.5,mEq)}
+  else if(k==="ball"){o.m=ball(5,mEq)}
+  else if(k==="cable"||k==="bbar"){o.c=cap(k==="bbar"?1.6:.6,k==="bbar"?mSt:mEq)}
+  return o});
+ /* tor ruchu i oś */
+ const c=n.c||{};
+ if(c.tr){const pts=[];for(let i=0;i<=48;i++){const q=frameAt(n,i/48)[c.tr];pts.push(P3(q,c.tr.endsWith("1")?13:0))}const g=new T.BufferGeometry().setFromPoints(pts),l=new T.Line(g,new T.LineDashedMaterial({color:0xff4d00,dashSize:3,gapSize:3}));l.computeLineDistances();sc.add(l)}
+ [].concat(c.ax||[]).forEach(x=>{const g=new T.BufferGeometry().setFromPoints([P3([x,151]),P3([x,-15])]),l=new T.Line(g,new T.LineDashedMaterial({color:0x141414,dashSize:3,gapSize:3,transparent:true,opacity:.5}));l.computeLineDistances();sc.add(l)});
+ (c.gh||[]).forEach(g=>{const ge=new T.BufferGeometry().setFromPoints([P3([g[0],g[1]]),P3([g[2],g[3]])]);sc.add(new T.Line(ge,new T.LineBasicMaterial({color:0xd6302a})))});
+ box.innerHTML="";box.appendChild(r.domElement);r.domElement.style.touchAction="pan-y";
+ /* kamera */
+ const st3={az:front?70:32,el:14,auto:true,t0:performance.now()};
+ function place(){const R=370,a=st3.az*Math.PI/180,e=st3.el*Math.PI/180;cam.position.set(Math.sin(a)*Math.cos(e)*R,68+Math.sin(e)*R,Math.cos(a)*Math.cos(e)*R);cam.lookAt(0,66,0)}
+ let drag=null;const cv=r.domElement;
+ cv.addEventListener("pointerdown",e=>{drag={x:e.clientX,y:e.clientY,az:st3.az,el:st3.el};st3.auto=false;cv.setPointerCapture(e.pointerId)});
+ cv.addEventListener("pointermove",e=>{if(!drag)return;st3.az=drag.az-(e.clientX-drag.x)*.5;st3.el=clamp(drag.el+(e.clientY-drag.y)*.3,-5,70)});
+ cv.addEventListener("pointerup",()=>{drag=null});
+ const v=(k,z)=>z;
+ function upd(now){
+  const F=frameAt(n,phase(now,n.d));
+  if(st3.auto)st3.az=(front?70:32)+Math.sin((now-st3.t0)/2600)*28;place();
+  const zs=front?0:11,zh=front?0:8;
+  const S0=P3(F.S),P0=P3(F.P),Sn=P3(F.S,zs),Sf=P3(F.S,-zs),Pn=P3(F.P,zh),Pf=P3(F.P,-zh);
+  let s1=Sn,s2=Sf,h1=Pn,h2=Pf;
+  if(front){const sd=(a,b)=>new T.Vector3(0,0,(a[0]<b[0]?-1:1));s1=S0.clone().addScaledVector(sd(F.E1,F.S),10);s2=S0.clone().addScaledVector(sd(F.E2,F.S),10);h1=P0.clone().addScaledVector(sd(F.K1,F.P),7);h2=P0.clone().addScaledVector(sd(F.K2,F.P),7)}
+  const az=front?0:1,E1=P3(F.E1,zs*az+(front?0:0)),W1=P3(F.W1,zs),E2=P3(F.E2,-zs),W2=P3(F.W2,-zs),K1=P3(F.K1,zh),A1=P3(F.A1,zh),K2=P3(F.K2,-zh),A2=P3(F.A2,-zh),T1=P3(F.T1,zh),L1=P3(F.L1,zh),T2=P3(F.T2,-zh),L2=P3(F.L2,-zh);
+  if(front){[E1,W1].forEach(q=>q.z+=s1.z-S0.z);[E2,W2].forEach(q=>q.z+=s2.z-S0.z)}
+  const neckTop=P3(F.H).lerp(S0,.55);
+  setCap(B.torso,P0,S0);setCap(B.pel,h1,h2);setCap(B.sho,s1,s2);setCap(B.neck,S0,neckTop);
+  setCap(B.ua1,s1,E1);setCap(B.fa1,E1,W1);setCap(B.ua2,s2,E2);setCap(B.fa2,E2,W2);
+  setCap(B.th1,h1,K1);setCap(B.sh1,K1,A1);setCap(B.ft1,L1,T1);setCap(B.th2,h2,K2);setCap(B.sh2,K2,A2);setCap(B.ft2,L2,T2);
+  J.hd.position.copy(P3(F.H));J.e1.position.copy(E1);J.e2.position.copy(E2);J.k1.position.copy(K1);J.k2.position.copy(K2);J.w1.position.copy(W1);J.w2.position.copy(W2);J.s1.position.copy(s1);J.s2.position.copy(s2);J.h1.position.copy(h1);J.h2.position.copy(h2);J.a1.position.copy(A1);J.a2.position.copy(A2);
+  dyn.forEach(o=>{const p=o.p,k=p[0];
+   if(k==="bb"){const q=F[p[1]],x=q[0]+(p[3]||0),y=q[1]+(p[4]||0),c0=P3([x,y]);setCap(o.bar,c0.clone().setZ(-38),c0.clone().setZ(38));o.pl.forEach((m,i)=>{m.position.set(c0.x,c0.y,i?27:-27)})}
+   else if(k==="db"){[[W1,1],[W2,-1]].forEach(([w,s],i)=>{const h=o.h[i],a=w.clone(),b=w.clone();if(front){a.x-=5;b.x+=5;h.pl.forEach((m,j)=>{m.rotation.z=Math.PI/2;m.position.set(w.x+(j?6:-6),w.y,w.z)})}else{a.z-=5;b.z+=5;h.pl.forEach((m,j)=>{m.rotation.x=Math.PI/2;m.position.set(w.x,w.y,w.z+(j?6:-6))})}setCap(h.bar,a,b)})}
+   else if(k==="bag"){const q=P3(F[p[1]]);o.m.position.set(q.x+(p[1]==="S"?-9:0),q.y+(p[1]==="S"?-14:0),q.z)}
+   else if(k==="pad"){const q=P3(F[p[1]]);setCap(o.c,q.clone().setZ(-12),q.clone().setZ(12))}
+   else if(k==="ball"){const q=P3(F[p[1]],zh);o.m.position.set(q.x+4,q.y-9,q.z)}
+   else if(k==="cable"){const fixed=typeof p[1]==="number",a=fixed?P3([p[1],p[2]]):P3(F[p[1]],zs),b=fixed?W1:P3(F[p[2]],zh);setCap(o.c,a,b)}
+   else if(k==="bbar"){const a=P3(F[p[1]]),b=P3(F[p[2]]);const d=new T.Vector3().subVectors(b,a).normalize();setCap(o.c,a.clone().addScaledVector(d,-8),b.clone().addScaledVector(d,8))}});
+  r.render(sc,cam);
+ }
+ const ctl={upd,el,st3,set(m){if(m==="spin"){st3.auto=true;st3.t0=performance.now();return}st3.auto=false;st3.az=m==="side"?0:m==="front"?90:35;st3.el=m==="front"?8:14},dispose(){try{r.dispose();r.forceContextLoss()}catch(e){}}};
+ return ctl;
+}
 /* widok z przodu: kolano nad stopą */
 function frontSq(depth){const d=depth;return{lab:"WIDOK Z PRZODU",d:3,k:[{raw:{H:[100,20],S:[100,34],P:[100,80],E1:[84,42],W1:[80,28],E2:[116,42],W2:[120,28],K1:[91,114],A1:[84,147],K2:[109,114],A2:[116,147],L1:[86,149],T1:[77,149],L2:[114,149],T2:[123,149]}},{raw:{H:[100,20+d],S:[100,34+d],P:[100,80+d],E1:[84,42+d],W1:[80,28+d],E2:[116,42+d],W2:[120,28+d],K1:[80,112],A1:[84,147],K2:[120,112],A2:[116,147],L1:[86,149],T1:[77,149],L2:[114,149],T2:[123,149]}}],pr:[["bbar","W1","W2"]],c:{ax:[80,120],axl:"KOLANO NAD PALCAMI",gh:[[100,80+d,96,112],[96,112,84,147],[100,80+d,104,112],[104,112,116,147]],ghl:[128,128]}}}
 
 /* ================= ćwiczenia ================= */
-const LR={A:{f:[86,147],l1:[-8,-8],l2:[8,8],t:0,a1:[-12,-12],a2:[12,12],to:[-100,100]},B:{f:[86,147],l1:[-8,-8],l2:[8,8],t:0,a1:[-88,-85],a2:[88,85],to:[-100,100]},pr:[["db","W1"],["db","W2"]]};
+const LR={plane:"front",A:{f:[86,147],l1:[-8,-8],l2:[8,8],t:0,a1:[-12,-12],a2:[12,12],to:[-100,100]},B:{f:[86,147],l1:[-8,-8],l2:[8,8],t:0,a1:[-88,-85],a2:[88,85],to:[-100,100]},pr:[["db","W1"],["db","W2"]]};
 const PU={A:{f:[177,147],l1:[65,65],t:-65,a1:[0,0],to:[10,10]},B:{f:[177,147],l1:[81,81],t:-81,a1:[115,-15],to:[10,10]}};
 const STAND={f:[100,147],l1:[0,0],t:0};
 const st2=(o)=>Object.assign({},STAND,o);
@@ -563,6 +651,7 @@ ipu:{n:"Pompki na podwyższeniu",d:"Dłonie na ławce lub skrzyni na szerokość
  x:["Opadające biodra: przeciąża lędźwie, ciało jak deska.","Łokcie na boki: przeciąża barki."],
  v:EX.tpd.h.v,h:{n:"Pompki o blat kuchenny",d:"Dłonie na krawędzi blatu, ciało w linii. 40 s."}}
 });
+EX.ll.v.plane="front";EX.abd.v.plane="front";
 WK.KA={n:"Siła: całe ciało",s:"Siłownia, ok. 55 min",it:[["ht","4 × 10-12","90 s"],["gs","3 × 10-12","90 s"],["rdl","3 × 10-12","90 s"],["dbrow","3 × 10-12 na rękę","60 s"],["idb","3 × 10-12","60 s"],["latpd","3 × 10-12","60 s"],["bss","2 × 10 na nogę","60 s"],["abd","2 × 15 kroków w stronę","45 s"],["plank","3 × 30-40 s","30 s"]]};
 WK.KB={n:"Trening obwodowy",s:"4 rundy: 40 s pracy, 20 s przerwy, 2 min między rundami",it:[["kbs","4 rundy × 40 s","20 s"],["wl","4 rundy × 40 s","20 s"],["ipu","4 rundy × 40 s","20 s"],["dbrow","4 rundy × 40 s","20 s"],["su","4 rundy × 40 s","20 s"],["mc","4 rundy × 30 s","20 s"],["plank","4 rundy × 30 s","2 min"]]};
 Object.assign(CARDIO,{
@@ -773,7 +862,7 @@ function exCard(key,idx,row,ds,mode){
  h+=`</div>${mode==="home"&&e.h?"":loadBlock(id,dose,key)}<div class="wt"><input data-w="${wkey}" value="${esc(wv)}" placeholder="ciężar × powt., np. 80 × 5"></div>`;
  h+=`<button class="more" data-a="op:${ok}">${open?"Zwiń opis":"Jak wykonać"}</button>`;
  if(open){
-  h+=`<div class="det"><div class="figbig">${fig(vis)}</div>${!alt&&e.fv?`<div class="figbig">${fig(e.fv)}</div>`:""}${e.x?`<div class="warnl"><b>Tego unikaj: ryzyko kontuzji</b><ul>${e.x.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`:""}`;
+  h+=`<div class="det">${fig3(vis)}${!alt&&e.fv?`<div class="figbig">${fig(e.fv)}</div>`:""}${e.x?`<div class="warnl"><b>Tego unikaj: ryzyko kontuzji</b><ul>${e.x.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`:""}`;
   if(alt)h+=`<p>${esc(e.h.d)}</p><div class="alt"><b>Na siłowni:</b> ${esc(e.n)}</div></div>`;
   else h+=`<p>${esc(e.d)}</p><ul>${e.c.map(c=>`<li>${esc(c)}</li>`).join("")}</ul>${e.h?`<div class="alt"><b>W domu:</b> ${esc(e.h.n)}. ${esc(e.h.d)}</div>`:""}</div>`;
  }
@@ -794,7 +883,7 @@ function vTrain(){
   h+=`</div>`+(EVKEY[key]!==undefined?eveCard(EVKEY[key],wi.ph):"")+`<div class="small mut" style="padding:0 4px 8px">Kropki to serie: dotknij po każdej. Pole pod ćwiczeniem zapamiętuje ostatni ciężar. Dotknij rysunku, żeby go powiększyć. Po treningu: <a href="#" data-a="go:mob:post" style="color:var(--acc2)">rozciąganie 8 min</a>.</div>`;
  }else{
   const c=CARDIO[key];
-  h+=`<div class="card"><h2>${esc(c.n)}</h2><div class="small mut">${esc(c.s)}</div><div class="figbig">${fig(c.v)}</div><h3>Teraz (${PHN[wi.ph]})</h3><p style="margin:4px 0">${esc(c.ph[wi.ph-1])}</p>${mode==="home"?`<div class="alt">${esc(c.home)}</div>`:""}<h3>Pozostałe fazy</h3>`;
+  h+=`<div class="card"><h2>${esc(c.n)}</h2><div class="small mut">${esc(c.s)}</div>${fig3(c.v)}<h3>Teraz (${PHN[wi.ph]})</h3><p style="margin:4px 0">${esc(c.ph[wi.ph-1])}</p>${mode==="home"?`<div class="alt">${esc(c.home)}</div>`:""}<h3>Pozostałe fazy</h3>`;
   c.ph.forEach((p,i)=>{if(i!==wi.ph-1)h+=`<p class="small mut" style="margin:4px 0"><b>${PHN[i+1]}:</b> ${esc(p)}</p>`});
   h+=`</div>`;
   if(c.v2)h+=`<div class="card"><div class="lab">Wariant rowerowy</div><div class="figbig">${fig(c.v2)}</div></div>`;
@@ -932,7 +1021,7 @@ function vProg(){
  h+=`</table></div><div class="card"><h2>Ustawienia</h2><label class="small mut">Data startu planu (poniedziałek tygodnia 1)</label><input type="date" id="sd" value="${esc(S.get("start","2026-11-02"))}" style="margin:6px 0 12px">
  <div class="small mut">Dane zapisują się w tej aplikacji na tym telefonie. Kopia zapasowa: skopiuj tekst i zachowaj w notatkach, przywrócisz go wklejając poniżej.</div>
  <div class="row" style="margin-top:8px"><button class="btn2" data-a="exp">Kopiuj dane</button><button class="btn2" data-a="imp">Wczytaj z pola</button></div><textarea id="bk" rows="3" style="margin-top:8px" placeholder="tu pojawi się lub wklejasz kopię"></textarea><div id="bkm" class="small mut"></div>
- <div class="small mut" style="margin-top:10px">Wersja 1.7 · protokół ${PC.code} · profil: ${PC.name}</div></div>`;
+ <div class="small mut" style="margin-top:10px">Wersja 1.8 · protokół ${PC.code} · profil: ${PC.name}</div></div>`;
  return h;
 }
 function chart(log){
@@ -954,7 +1043,7 @@ function render(){
  document.getElementById("hsub").textContent=PC.from+"→"+PC.goal+" kg // tydz. "+String(wi.w).padStart(2,"0")+"/"+PC.weeks+" // "+PHN[wi.ph].replace("Faza ","F").replace(": "," ");
  app.innerHTML=st.tab==="today"?vToday():st.tab==="train"?vTrain():st.tab==="mob"?vMob():st.tab==="diet"?vDiet():vProg();
  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.tab===st.tab));
- figMount();
+ figMount();mount3D();
  const wf=document.getElementById("wf");
  if(wf)wf.addEventListener("submit",e=>{e.preventDefault();const kg=parseFloat(String(document.getElementById("wkg").value).replace(",","."));const dt=document.getElementById("wdt").value;if(!kg||!dt)return;const log=S.get("log",[]).filter(x=>x.d!==dt);log.push({d:dt,kg});S.set("log",log);render()});
  const sd=document.getElementById("sd");if(sd)sd.addEventListener("change",()=>{if(sd.value){S.set("start",sd.value);render()}});
@@ -981,6 +1070,7 @@ document.getElementById("app").addEventListener("click",e=>{
  else if(k==="sn"){st.shopN=+v}
  else if(k==="sf"){st.shopFrom=+v}
  else if(k==="sw"){st.shopWho=v}
+ else if(k==="cam"){if(V3.active)V3.active.set(v);return}
  else if(k==="rmsave"){const w=parseFloat(String(document.getElementById("rmw_"+v).value).replace(",",".")),r=parseInt(document.getElementById("rmr_"+v).value,10);if(w>0&&r>0&&r<=20){const o=S.get("rm",{});o[v]={w,r,d:iso(new Date())};S.set("rm",o);Object.keys(st.open).forEach(x=>{if(x.startsWith("ts_")&&x.endsWith("_"+v))st.open[x]=false})}}
  else if(k==="pick"){const [slot,id]=v.split(":");const o=S.get("sel",{});if(id)o[slot]=id;else delete o[slot];S.set("sel",o);const [gg,ii]=slot.split("-");st.open["sw_"+gg+"_"+ii]=false}
  else if(k==="mf"){st.mf=v}
