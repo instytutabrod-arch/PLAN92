@@ -572,8 +572,8 @@ const EVKEY={A:1,B:2,C:4,D:5,ND:0};
 function eveCard(g,ph){const e=EVE[g];if(!e)return "";const x=e.ph[ph-1];return `<div class="card"><div class="lab">Druga sesja · ${e.t}</div><h2 style="margin-top:2px">${esc(x[1])}</h2><div class="stripw">${strip(x[0]==="bike"?BIKEV:x[0]==="run"?RUNV:null)}</div><p class="small" style="margin:4px 0">${esc(x[2])}</p>${x[0]==="run"?`<p class="small mut" style="margin:4px 0">Ból kolana, piszczeli albo ścięgna Achillesa: zamień bieg na rower tej samej długości. Bieg na zmęczonych nogach przy obecnej masie to najczęstsza przyczyna przerwy w planie.</p>`:""}</div>`}
 let CARDIO={
 RUN:{n:"Bieg spokojny + brzuch",s:"Strefa tlenowa (zone 2)",v:RUNV,ph:["60 min spokojnie (ok. 9-10 km), tętno w strefie 2, rozmowa pełnymi zdaniami. Potem 10 min: pozycja łódki 3 × 30 s i skręty rosyjskie 3 × 20. Tydzień w fazie 1: ok. 45 km biegu (tydzień 1-2: ok. 35 km).","70 min (ok. 11 km). Co drugi tydzień w środku 10 × 1 min mocno pod górkę, zejście truchtem. Potem brzuch 10 min. Tydzień w fazie 2: ok. 55 km.","75 min w terenie z podbiegami (ok. 12 km), spokojnie. Potem brzuch 10 min. Tydzień w fazie 3: ok. 60 km plus marsze."],home:"Bez zmian: bieg na zewnątrz. Przy złej pogodzie 45 min szybkiego marszu pod górę na bieżni lub orbitrek."},
-SOB:{n:"Długi wysiłek",s:"Rower w terenie lub marsz z plecakiem",v2:BIKEV,v:{A:{p:[100,84],t:20,a1:[-20,40],a2:[30,60],l1:[40,-5],l2:[-15,-25],to:[90,80]},B:{p:[100,84],t:20,a1:[30,60],a2:[-20,40],l1:[-15,-25],l2:[40,-5],to:[80,90]},pr:[["bag","S"]],d:1.6},ph:["Rower w terenie 1,5-2 h, spokojnie, na luzie w oddychaniu.","Rower 2-2,5 h albo marsz 15 km z plecakiem 6 kg.","Marsz górski 25-45 km, przewyższenie 1000-2000 m, plecak 6-8 kg, tempo 4,5-5 km/h z postojami max 10 min. Raz w miesiącu odcinek nocny 3-4 h z czołówką. W czerwcu dwa weekendy sobota + niedziela (np. 45 + 35 km): próba generalna przed Pętlą Karkonoską 140 km / 48 h."],home:"Bez zmian. Weź elektrolity i coś na trasę."},
-ND:{n:"Długi bieg i regeneracja",s:"Długi bieg rano, wieczorem rozciąganie 20 min",v:RUNV,ph:["Długi bieg 75-90 min (ok. 12-14 km), najwolniej w tygodniu. Wieczorem rozciąganie. Jeden wolny posiłek w ciągu dnia.","Długi bieg 100-110 min (ok. 16-18 km). Wieczorem rozciąganie.","Drugi dzień marszu na zmęczonych nogach: 20-35 km (back-to-back), albo długi bieg 2 h w terenie (ok. 18-20 km). Po marszu: stopy, pęcherze, paznokcie."],home:"Bez zmian."}
+SOB:{n:"Długi wysiłek",s:"Rower w terenie lub marsz z plecakiem",v2:BIKEV,v:{A:{p:[100,84],t:20,a1:[-20,40],a2:[30,60],l1:[40,-5],l2:[-15,-25],to:[90,80]},B:{p:[100,84],t:20,a1:[30,60],a2:[-20,40],l1:[-15,-25],l2:[40,-5],to:[80,90]},pr:[["bag","S"]],d:1.6},ph:["Rower w terenie 1,5-2 h, spokojnie, na luzie w oddychaniu.","Rower 2-2,5 h albo marsz 15 km z plecakiem 6 kg.","Marsz górski 25-45 km, przewyższenie 1000-2000 m, plecak 6-8 kg, tempo 4,5-5 km/h z postojami max 10 min. Raz w miesiącu odcinek nocny 3-4 h z czołówką. W sierpniu dwa weekendy sobota + niedziela (np. 45 + 35 km, ostatni najpóźniej 4 tygodnie przed startem): próba generalna przed Pętlą Karkonoską 140 km / 48 h, start 19.09.2027."],tp:"Taper: marsz 15-20 km spokojnie, ten sam plecak, buty i jedzenie co na starcie. W ostatnią sobotę przed startem tylko 1-1,5 h spaceru. Paznokcie obcięte 3-4 dni przed startem, nie dzień wcześniej.",home:"Bez zmian. Weź elektrolity i coś na trasę."},
+ND:{n:"Długi bieg i regeneracja",s:"Długi bieg rano, wieczorem rozciąganie 20 min",v:RUNV,ph:["Długi bieg 75-90 min (ok. 12-14 km), najwolniej w tygodniu. Wieczorem rozciąganie. Jeden wolny posiłek w ciągu dnia.","Długi bieg 100-110 min (ok. 16-18 km). Wieczorem rozciąganie.","Drugi dzień marszu na zmęczonych nogach: 20-35 km (back-to-back), albo długi bieg 2 h w terenie (ok. 18-20 km). Po marszu: stopy, pęcherze, paznokcie."],tp:"Taper: bieg 40-50 min luźno albo rower 1 h. Śpij 8-9 h, węglowodany w normie, bez nowych potraw.",home:"Bez zmian."}
 };
 let DAYPLAN={1:"A",2:"B",3:"RUN",4:"C",5:"D",6:"SOB",0:"ND"};
 
@@ -760,7 +760,7 @@ const K_CP=[
  {g:"Siła i sprawność",it:[["s1","Deska 60 s"],["s2","10 pompek z podłogi"],["s3","Hip thrust 10 × masa ciała"],["s4","Przysiad z hantlą 16 kg × 10"]]}
 ];
 const PROF={
-m:{name:"Damian",code:"EXP-092",from:118,goal:92,weeks:36,phb:[12,24],water:"Woda 3,5-4 l",nutri:"min",
+m:{name:"Damian",code:"EXP-092",from:118,goal:92,weeks:46,phb:[13,26],event:{d:"2027-09-19",n:"Pętla Karkonoska 140 km / 48 h"},water:"Woda 3,5-4 l",nutri:"min",
  chips:[["A","Pn · A"],["B","Wt · B"],["RUN","Śr · bieg"],["C","Cz · C"],["D","Pt · D"],["SOB","Sb · długi"],["ND","Nd · długi bieg"]],
  tests:["10 km","Podciąg.","Pas cm","Waga"]},
 k:{name:"Kinga",code:"EXP-058",from:64,goal:58,weeks:16,phb:[6,12],water:"Woda 2-2,5 l",nutri:"b",
@@ -853,7 +853,9 @@ function applyProfile(id){PID=id;PC=PROF[id];
 /* ================= daty i fazy ================= */
 const st={tab:"today",off:0,wk:null,dd:null,dv:"plan",open:{},mob:"hip",shopN:3,shopFrom:0};
 function curDate(){const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()+st.off);return d}
-function wkInfo(d){const s0=new Date(S.get("start","2026-11-02")+"T12:00:00");const raw=Math.floor((d-s0)/(864e5*7))+1;const w=Math.max(1,Math.min(PC.weeks,raw));return{w,raw,ph:w<=PC.phb[0]?1:w<=PC.phb[1]?2:3,deload:raw>=1&&w%4===0,test:w%4===1}}
+function wkInfo(d){const s0=new Date(S.get("start","2026-11-02")+"T12:00:00");const raw=Math.floor((d-s0)/(864e5*7))+1;const w=Math.max(1,Math.min(PC.weeks,raw));const taper=!!PC.event&&w>=PC.weeks-1&&raw>=PC.weeks-1;return{w,raw,ph:w<=PC.phb[0]?1:w<=PC.phb[1]?2:3,deload:raw>=1&&w%4===0&&!taper,test:w%4===1&&!taper,taper}}
+function evDays(d){if(!PC.event)return null;return Math.round((new Date(PC.event.d+"T12:00:00")-new Date(d.getFullYear(),d.getMonth(),d.getDate(),12))/864e5)}
+function cph(c,wi){return wi.taper&&c.tp?c.tp:c.ph[wi.ph-1]}
 let PHN=["","Faza 1: baza","Faza 2: siła","Faza 3: moc i góry"];
 let PHNOTE=["","RIR 2-3 (zapas powtórzeń). Przysiad w tygodniach 1-4 jako goblet. Martwy ciąg: technika, start od 60 kg.","RIR 1-2. Gdy zrobisz górną granicę powtórzeń we wszystkich seriach, dokładasz 2,5 kg (góra) lub 5 kg (nogi).","Skoki 5 × 4, wyższa skrzynia przy wejściach. W treningach B i D odejmij po 1 serii z każdego ćwiczenia: nogi i marsze mają pierwszeństwo."];
 
@@ -900,8 +902,10 @@ function todayItemsK(d){
 }
 function todayItems(d){if(PID==="k")return todayItemsK(d);
  const g=d.getDay(),key=DAYPLAN[g],items=[];
- const wname=WK[key]?WK[key].n:CARDIO[key].n;
- if(g!==0){
+ const wname=WK[key]?WK[key].n:CARDIO[key].n,evn=evDays(d),race=evn!=null&&evn<=0&&evn>=-2;
+ if(race)items.push({t:evn===0?"start":"cały dzień",id:"race",n:PC.event.n+": "+(evn===-2?"meta i regeneracja":"dzień "+(1-evn)),s:evn===-2?"Białko 40 g w ciągu 1 h, sen, krótki spacer. Zero treningu przez 5-7 dni.":"250-300 kcal/h, 500-750 ml płynu/h z elektrolitami (sód!), przegląd stóp co 4-5 h, sen 2-3 h w nocy"});
+ else if(evn===1)items.push({t:"cały dzień",id:"wk",n:"Dzień przed startem",s:"Odpoczynek, spacer 30 min, węglowodany 6-8 g/kg, plecak spakowany wieczorem"});
+ else if(g!==0){
   items.push({t:g===6?"7:00":"6:00",id:"hip",n:"Mobilność bioder",s:"10 min, część rozgrzewki",go:"mob:hip"});
   items.push({t:g===6?"7:30":"6:10",id:"wk",n:wname,s:WK[key]?WK[key].s:CARDIO[key].s,go:"train:"+key});
   if(g!==6)items.push({t:"7:15",id:"post",n:"Rozciąganie po treningu",s:"8 min",go:"mob:post"});
@@ -926,7 +930,7 @@ function vToday(){
  let h=(!S.get("hideInst",false)?installCard(false):"");
  h+=`<div class="card"><div class="row" style="justify-content:space-between"><div><div class="lab">${DN[d.getDay()]}, ${d.toLocaleDateString("pl-PL",{day:"numeric",month:"long"})}</div>
  <h2 style="margin-top:2px">Tydzień ${wi.w} z ${PC.weeks}</h2></div><div class="dnav"><button data-a="off:-1" aria-label="Poprzedni dzień">‹</button><button data-a="off:0" style="width:auto;padding:0 10px;font-size:12.5px">dziś</button><button data-a="off:1" aria-label="Następny dzień">›</button></div></div>
- <div style="margin-top:6px"><span class="pill acc">${PHN[wi.ph]}</span>${wi.deload?'<span class="pill warn">Tydzień odciążenia: serie −40%</span>':""}${wi.test&&wi.raw>=1?'<span class="pill warn">Tydzień testów ciężaru</span>':""}${wi.raw<1?'<span class="pill">Start planu: '+esc(S.get("start","2026-11-02"))+"</span>":""}<span class="pill">${ROT[d.getDay()].kcal} kcal</span></div>
+ <div style="margin-top:6px"><span class="pill acc">${PHN[wi.ph]}</span>${wi.deload?'<span class="pill warn">Tydzień odciążenia: serie −40%</span>':""}${wi.test&&wi.raw>=1?'<span class="pill warn">Tydzień testów ciężaru</span>':""}${wi.taper?'<span class="pill warn">Taper: objętość −50%, intensywność zostaje</span>':""}${(()=>{const n=evDays(d);return n!=null&&n>=0?'<span class="pill acc">'+(n===0?"Dziś start: ":"Do startu "+n+" dni: ")+esc(PC.event.n)+"</span>":""})()}${wi.raw<1?'<span class="pill">Start planu: '+esc(S.get("start","2026-11-02"))+"</span>":""}<span class="pill">${ROT[d.getDay()].kcal} kcal</span></div>
  <div class="bar"><i style="width:${pct}%"></i></div><div class="small mut" style="margin-top:5px">${done} z ${items.length} punktów (${pct}%)</div></div><div class="card">`;
  items.forEach(i=>{h+=`<div class="item"><div class="time">${esc(i.t)}</div><button class="ck ${isOn(ds,i.id)?"on":""}" data-a="ck:${i.id}" aria-label="Odhacz"></button><div class="itx"><b>${esc(i.n)}</b><div class="small mut">${esc(i.s)}</div></div>${i.go?`<button class="go" data-a="go:${i.go}">Otwórz</button>`:""}</div>`});
  h+="</div>";
@@ -983,7 +987,7 @@ function vTrain(){
   h+=`</div>`+(EVKEY[key]!==undefined?eveCard(EVKEY[key],wi.ph):"")+`<div class="small mut" style="padding:0 4px 8px">Kropki to serie: dotknij po każdej. Pole pod ćwiczeniem zapamiętuje ostatni ciężar. Dotknij rysunku, żeby go powiększyć. Po treningu: <a href="#" data-a="go:mob:post" style="color:var(--acc2)">rozciąganie 8 min</a>.</div>`;
  }else{
   const c=CARDIO[key];
-  h+=`<div class="card"><h2>${esc(c.n)}</h2><div class="small mut">${esc(c.s)}</div>${fig3(c.v)}<h3>Teraz (${PHN[wi.ph]})</h3><p style="margin:4px 0">${esc(c.ph[wi.ph-1])}</p>${mode==="home"?`<div class="alt">${esc(c.home)}</div>`:""}<h3>Pozostałe fazy</h3>`;
+  h+=`<div class="card"><h2>${esc(c.n)}</h2><div class="small mut">${esc(c.s)}</div>${fig3(c.v)}<h3>Teraz (${PHN[wi.ph]})</h3>${wi.taper&&c.tp?'<span class="pill warn">Taper przed startem</span>':""}<p style="margin:4px 0">${esc(cph(c,wi))}</p>${mode==="home"?`<div class="alt">${esc(c.home)}</div>`:""}<h3>Pozostałe fazy</h3>`;
   c.ph.forEach((p,i)=>{if(i!==wi.ph-1)h+=`<p class="small mut" style="margin:4px 0"><b>${PHN[i+1]}:</b> ${esc(p)}</p>`});
   h+=`</div>`;
   if(c.v2)h+=`<div class="card"><div class="lab">Wariant rowerowy</div><div class="stripw">${strip(c.v2)}</div></div>`;
@@ -1129,7 +1133,7 @@ function vProg(){
  h+=`</table></div><div class="card"><h2>Ustawienia</h2><label class="small mut">Data startu planu (poniedziałek tygodnia 1)</label><input type="date" id="sd" value="${esc(S.get("start","2026-11-02"))}" style="margin:6px 0 12px">
  <div class="small mut">Dane zapisują się w tej aplikacji na tym telefonie. Kopia zapasowa: skopiuj tekst i zachowaj w notatkach, przywrócisz go wklejając poniżej.</div>
  <div class="row" style="margin-top:8px"><button class="btn2" data-a="exp">Kopiuj dane</button><button class="btn2" data-a="imp">Wczytaj z pola</button></div><textarea id="bk" rows="3" style="margin-top:8px" placeholder="tu pojawi się lub wklejasz kopię"></textarea><div id="bkm" class="small mut"></div>
- <div class="small mut" style="margin-top:10px">Wersja 2.1 · protokół ${PC.code} · profil: ${PC.name}</div></div>`;
+ <div class="small mut" style="margin-top:10px">Wersja 2.2 · protokół ${PC.code} · profil: ${PC.name}</div></div>`;
  return h;
 }
 function chart(log){
