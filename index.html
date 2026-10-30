@@ -167,17 +167,18 @@ const DS=["Nd","Pn","Wt","Śr","Cz","Pt","Sb"];
 const LEN={T:46,N:13,U:25,F:23,TH:34,SH:33};
 const rad=a=>a*Math.PI/180,deg=r=>r*180/Math.PI,clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const vec=(a,l)=>[Math.sin(rad(a))*l,Math.cos(rad(a))*l];
-function ik(O,T,L1,L2,pref){
+function ik(O,T,L1,L2,pref,c,key){
  const dx=T[0]-O[0],dy=T[1]-O[1];let d=Math.hypot(dx,dy);d=clamp(d,Math.abs(L1-L2)+.5,L1+L2-.3);
  const a=Math.acos(clamp((L1*L1+d*d-L2*L2)/(2*L1*d),-1,1)),b=Math.atan2(dy,dx);
  const c1=[O[0]+L1*Math.cos(b+a),O[1]+L1*Math.sin(b+a)],c2=[O[0]+L1*Math.cos(b-a),O[1]+L1*Math.sin(b-a)];
- const pick=pref==="back"?(c1[0]<c2[0]?c1:c2):pref==="up"?(c1[1]<c2[1]?c1:c2):pref==="down"?(c1[1]>c2[1]?c1:c2):(c1[0]>c2[0]?c1:c2);
+ let pick;if(c&&c._ik&&c._ik[key]!==undefined)pick=c._ik[key]>0?c1:c2;else{pick=pref==="back"?(c1[0]<c2[0]?c1:c2):pref==="up"?(c1[1]<c2[1]?c1:c2):pref==="down"?(c1[1]>c2[1]?c1:c2):(c1[0]>c2[0]?c1:c2);if(c){c._ik=c._ik||{};c._ik[key]=pick===c1?1:-1}}
  return[pick,[O[0]+d*Math.cos(b),O[1]+d*Math.sin(b)]];
 }
 function pose(s,c){
  c=c||{};
  if(s.raw){const r={};for(const k in s.raw)r[k]=s.raw[k];return r}
- const l1=s.l1,l2=s.l2||s.l1,a1=s.a1,a2=s.a2||s.a1,to=s.to||[90,90];
+ const lim=(arr,key,mx)=>{if(!arr)return arr;const sg=c._ks&&c._ks[key];if(!sg)return arr;let r=nAng(arr[0]-arr[1]);if(r*sg<0)r=0;if(Math.abs(r)>mx)r=sg*mx;return[arr[0],arr[0]-r]};
+ const l1=lim(s.l1,"l1",160),l2=lim(s.l2||s.l1,s.l2?"l2":"l1",160),a1=lim(s.a1,"a1",165),a2=lim(s.a2||s.a1,s.a2?"a2":"a1",165),to=s.to||[90,90];
  let P;
  if(s.f){const sh=vec(l1[1],LEN.SH),th=vec(l1[0],LEN.TH);P=[s.f[0]-sh[0]-th[0],s.f[1]-sh[1]-th[1]]}else P=s.p.slice();
  let t=s.t||0;
@@ -189,24 +190,26 @@ function pose(s,c){
  const limb=(o,ang,la,lb)=>{const a=vec(ang[0],la),J=[o[0]+a[0],o[1]+a[1]],b=vec(ang[1],lb);return[J,[J[0]+b[0],J[1]+b[1]]]};
  let E1,W1,E2,W2,K1,A1,K2,A2;
  const w1=s.w1||c.W1;
- if(w1)[E1,W1]=ik(S,w1,LEN.U,LEN.F,c.eb||"fwd");else[E1,W1]=limb(S,a1,LEN.U,LEN.F);
+ if(w1)[E1,W1]=ik(S,w1,LEN.U,LEN.F,c.eb||"fwd",c,"w1");else[E1,W1]=limb(S,a1,LEN.U,LEN.F);
  const w2=s.w2||c.W2;
- if(w2)[E2,W2]=ik(S,w2,LEN.U,LEN.F,c.eb2||c.eb||"fwd");else if(w1&&!s.a2)[E2,W2]=[E1,W1];else[E2,W2]=limb(S,a2,LEN.U,LEN.F);
- if(c.A1&&!s.f)[K1,A1]=ik(P,c.A1,LEN.TH,LEN.SH,c.kb1||"fwd");else[K1,A1]=limb(P,l1,LEN.TH,LEN.SH);
- if(c.A2)[K2,A2]=ik(P,c.A2,LEN.TH,LEN.SH,c.kb2||"fwd");else if(c.A1&&!s.f&&!s.l2)[K2,A2]=[K1,A1];else[K2,A2]=limb(P,l2,LEN.TH,LEN.SH);
+ if(w2)[E2,W2]=ik(S,w2,LEN.U,LEN.F,c.eb2||c.eb||"fwd",c,"w2");else if(w1&&!s.a2)[E2,W2]=[E1,W1];else[E2,W2]=limb(S,a2,LEN.U,LEN.F);
+ if(c.A1&&!s.f)[K1,A1]=ik(P,c.A1,LEN.TH,LEN.SH,c.kb1||"fwd",c,"k1");else[K1,A1]=limb(P,l1,LEN.TH,LEN.SH);
+ if(c.A2)[K2,A2]=ik(P,c.A2,LEN.TH,LEN.SH,c.kb2||"fwd",c,"k2");else if(c.A1&&!s.f&&!s.l2)[K2,A2]=[K1,A1];else[K2,A2]=limb(P,l2,LEN.TH,LEN.SH);
  const t1=vec(to[0],11),t2=vec(to.length>1?to[1]:to[0],11),h1=vec(to[0],-4),h2=vec(to.length>1?to[1]:to[0],-4);
  return{H,S,P,E1,W1,E2,W2,K1,A1,K2,A2,T1:[A1[0]+t1[0],A1[1]+t1[1]],T2:[A2[0]+t2[0],A2[1]+t2[1]],L1:[A1[0]+h1[0],A1[1]+h1[1]],L2:[A2[0]+h2[0],A2[1]+h2[1]]};
 }
+const nAng=d=>((d%360)+540)%360-180,ANG=["t","a1","a2","l1","l2","to"];
 function lerpSpec(a,b,f){
  const o={};
  for(const k in a){const x=a[k],y=b[k];
   if(y===undefined){o[k]=x;continue}
   if(k==="raw"){o.raw={};for(const j in x){const p=x[j],q=y[j]||p;o.raw[j]=[p[0]+(q[0]-p[0])*f,p[1]+(q[1]-p[1])*f]}continue}
-  if(Array.isArray(x))o[k]=x.map((v,i)=>v+((y[i]===undefined?v:y[i])-v)*f);else if(typeof x==="number")o[k]=x+(y-x)*f;else o[k]=x}
+  const ang=ANG.includes(k),df=(u,w)=>ang?nAng(w-u):(w-u);
+  if(Array.isArray(x))o[k]=x.map((v,i)=>v+df(v,y[i]===undefined?v:y[i])*f);else if(typeof x==="number")o[k]=x+df(x,y)*f;else o[k]=x}
  for(const k in b)if(o[k]===undefined)o[k]=b[k];
  return o;
 }
-function normFig(v){return{k:v.k||[v.A,v.B],c:v.c||{},d:v.d||3,pr:v.pr||[],nf:v.nf,lab:v.lab,plane:v.plane}}
+function normFig(v){const k=v.k||[v.A,v.B],c=v.c||{};if(!c._ks){c._ks={};["l1","l2","a1","a2"].forEach(key=>{let best=0;k.forEach(f=>{const arr=f[key]||(key==="l2"?f.l1:key==="a2"?f.a1:null);if(!arr)return;const r=nAng(arr[0]-arr[1]);if(Math.abs(r)>Math.abs(best))best=r});if(Math.abs(best)>4)c._ks[key]=Math.sign(best)})}if(!v.c)v.c=c;return{k,c,d:v.d||3,pr:v.pr||[],nf:v.nf,lab:v.lab,plane:v.plane}}
 function frameAt(n,u){const ks=n.k,m=ks.length-1,x=clamp(u,0,1)*m,i=Math.min(Math.floor(x),m-1),f=x-i;return pose(lerpSpec(ks[i],ks[i+1],f),n.c)}
 const ease=x=>x<.5?2*x*x:1-Math.pow(-2*x+2,2)/2;
 function phase(now,d){const p=(now/1000/d)%2,q=p<1?p:2-p;return ease(clamp((q-.08)/.84,0,1))}
@@ -477,7 +480,7 @@ bp:{v:{k:[{p:[115,110],t:-90,w1:[69,62],l1:[75,0]},{p:[115,110],t:-90,w1:[84,101
  x:["Łokcie rozłożone na 90° od tułowia: przeciąża barki. Trzymaj 45-60°.","Sztanga odbija się od klatki: kontrolowane opuszczenie, krótki kontakt.","Pośladki odrywają się od ławki: przeprost lędźwi. Zmniejsz ciężar.","Ciężkie serie bez asekuracji: używaj zaczepów bezpieczeństwa albo partnera."]},
 idb:{v:{k:[{p:[115,112],t:-60,w1:[76,41],l1:[80,0]},{p:[115,112],t:-60,w1:[88,90],l1:[80,0]}],c:{eb:"down",tr:"W1"},pr:[["line",120,118,62,84],["rect",95,118,40,6],["db","W1"]],d:3},
  x:["Hantle schodzą za nisko, łokcie szeroko: ból przedniej części barku. Schodź do linii klatki."]},
-ohp:{v:{k:[{p:[95,110],t:0,w1:[99,66],l1:[90,0]},{p:[95,110],t:0,w1:[97,17],l1:[90,0]}],c:{eb:"fwd",tr:"W1",ax:97,axl:"OŚ: NAD BARKIEM"},pr:[["rect",72,112,45,8],["line",85,112,85,58],["db","W1"]],d:3},
+ohp:{v:{k:[{p:[95,110],t:0,w1:[110,50],l1:[90,0]},{p:[95,110],t:0,w1:[99,17],l1:[90,0]}],c:{eb:"down",tr:"W1",ax:99,axl:"OŚ: NAD BARKIEM"},pr:[["rect",72,112,45,8],["line",85,112,85,58],["db","W1"]],d:3},
  x:["Wyginanie lędźwi do tyłu: napnij brzuch i pośladki, oparcie prawie pionowe.","Hantle wędrują przed twarz: tor pionowy nad barkiem.","Głowa wysunięta do przodu: broda lekko schowana."]},
 pu:{v:PU2,x:["Opadające biodra (zapadnięty brzuch): przeciąża lędźwie. Ciało jak deska.","Łokcie na boki pod kątem 90°: przeciąża barki. Łokcie ok. 45° w stronę bioder."]},
 pull:{v:{k:[{p:[100,108],t:0,l1:[10,-75],to:[0,0]},{p:[100,74],t:0,l1:[10,-75],to:[0,0]}],c:{W1:[100,14],eb:"fwd",tr:"S",ax:100,axl:"OŚ: PIONOWO POD DRĄŻKIEM"},pr:[["bar",55,150,14]],nf:1,d:3},
@@ -539,7 +542,7 @@ const FROG={A:{p:[120,112],t:-80,a1:[0,-90],l1:[0,90],to:[0,0]},B:{p:[132,116],t
 const MOB={
 hip:{n:"Mobilność bioder",s:"Codziennie, 10 min, przed treningiem lub wieczorem",it:[
 {n:"Kontrolowane krążenia bioder",e:"hip CARs",dose:"5 na stronę",d:"W podporze na czworakach unieś kolano w bok, zatocz nim jak największy, powolny okrąg do tyłu i z powrotem. Reszta ciała nieruchoma.",v:{A:{p:[120,108],t:-85,a1:[0,0],l1:[0,90],to:[0,0]},B:{p:[120,108],t:-85,a1:[0,0],l1:[0,90],l2:[120,90],to:[0,0]},d:3.5}},
-{n:"Przejścia 90/90",dose:"2 × 8",d:"Siad, obie nogi zgięte pod kątem 90°, jedna z przodu, druga z boku. Przenoś kolana na drugą stronę bez pomocy rąk, tułów prosty. Na końcu pochyl się nad przednią goleń na 20 s.",v:{A:{p:[100,132],t:0,a1:[30,30],l1:[80,-100],l2:[-80,100]},B:{p:[100,132],t:0,a1:[30,30],l1:[150,10],l2:[-150,-10]},d:3}},
+{n:"Przejścia 90/90",dose:"2 × 8",d:"Siad, obie nogi zgięte pod kątem 90°, jedna z przodu, druga z boku. Przenoś kolana na drugą stronę bez pomocy rąk, tułów prosty. Na końcu pochyl się nad przednią goleń na 20 s.",v:{A:{p:[100,132],t:0,a1:[30,30],l1:[80,-80],l2:[-80,80]},B:{p:[100,132],t:0,a1:[30,30],l1:[150,10],l2:[-150,-10]},d:3}},
 {n:"Rozciąganie zginaczy biodra przy kanapie",e:"couch stretch",dose:"2 × 45 s na stronę",hold:45,d:"Tylne kolano przy oparciu kanapy lub ławki, grzbiet stopy w górę oparcia, przednia stopa przed tobą. Napnij pośladek tylnej nogi i wypchnij biodro do przodu. Kluczowe przy siedzącej pracy i do biegania.",v:{A:{p:[100,112],t:10,a1:[20,20],l1:[85,0],l2:[-20,180],to:[90,180]},B:{p:[104,112],t:-5,a1:[20,20],l1:[85,0],l2:[-20,180],to:[90,180]},pr:[["rect",60,98,26,52]],d:4}},
 {n:"Przysiad kozacki",e:"Cossack squat",dose:"2 × 6 na stronę",d:"Szeroki rozkrok, siadasz nisko na jedną nogę, druga prosta z palcami w górę. Przenoś ciężar na drugą stronę, nie wstając wysoko.",v:{A:{f:[55,147],l1:[-70,-5],l2:[48,48],t:0,a1:[20,150],a2:[-20,-150],to:[-100,100]},B:{f:[55,147],l1:[-48,-48],l2:[70,5],t:0,a1:[20,150],a2:[-20,-150],to:[-100,100]},d:3.2}},
 {n:"Żabka",e:"frog stretch",dose:"2 × 45 s",hold:45,d:"Na czworakach rozsuń kolana szeroko, stopy na zewnątrz, piszczele równolegle. Cofaj powoli biodra do tyłu. Przywodziciele: ruch boczny w siatkówce.",v:FROG},
@@ -618,7 +621,7 @@ const TARGET={na:{2:5000,6:5000,d:3500}};
 
 /* ================= profil: Kinga ================= */
 const WALKV={A:{p:[100,81],t:2,a1:[-15,-5],a2:[15,20],l1:[18,0],l2:[-15,-10]},B:{p:[100,81],t:2,a1:[15,20],a2:[-15,-5],l1:[-15,-10],l2:[18,0]},d:1.8};
-const DANCEV={A:{p:[100,82],t:-8,a1:[160,175],a2:[-30,10],l1:[5,0],l2:[-15,-25]},B:{p:[100,82],t:8,a1:[30,95],a2:[190,175],l1:[-12,-15],l2:[8,0]},d:1.2};
+const DANCEV={A:{p:[100,82],t:-8,a1:[160,175],a2:[-30,-10],l1:[5,0],l2:[10,-15]},B:{p:[100,82],t:8,a1:[30,95],a2:[-170,-160],l1:[-12,-15],l2:[8,0]},d:1.2};
 Object.assign(EX,{
 gs:{n:"Przysiad z hantlą przy klatce",e:"goblet squat",d:"Hantel trzymany pionowo przy mostku, łokcie w dół. Stopy nieco szerzej niż biodra, palce lekko na zewnątrz. Siadasz między pięty, kolana idą nad palcami, plecy proste. Wstajesz, pchając całą stopą.",c:["Łokcie schodzą między kolana","Klatka wysoko","Pięty na podłodze"],
  x:["Kolana uciekają do środka: kolano nad 2.-3. palcem, jak w widoku z przodu.","Pięty się odrywają: ciężar na całej stopie.","Zaokrąglenie lędźwi na dole: schodź tylko tak nisko, jak utrzymasz proste plecy."],
@@ -1070,7 +1073,7 @@ function vProg(){
  h+=`</table></div><div class="card"><h2>Ustawienia</h2><label class="small mut">Data startu planu (poniedziałek tygodnia 1)</label><input type="date" id="sd" value="${esc(S.get("start","2026-11-02"))}" style="margin:6px 0 12px">
  <div class="small mut">Dane zapisują się w tej aplikacji na tym telefonie. Kopia zapasowa: skopiuj tekst i zachowaj w notatkach, przywrócisz go wklejając poniżej.</div>
  <div class="row" style="margin-top:8px"><button class="btn2" data-a="exp">Kopiuj dane</button><button class="btn2" data-a="imp">Wczytaj z pola</button></div><textarea id="bk" rows="3" style="margin-top:8px" placeholder="tu pojawi się lub wklejasz kopię"></textarea><div id="bkm" class="small mut"></div>
- <div class="small mut" style="margin-top:10px">Wersja 1.9 · protokół ${PC.code} · profil: ${PC.name}</div></div>`;
+ <div class="small mut" style="margin-top:10px">Wersja 2.0 · protokół ${PC.code} · profil: ${PC.name}</div></div>`;
  return h;
 }
 function chart(log){
