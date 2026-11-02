@@ -1,4 +1,27 @@
-{"updated":"2026-10-30","items":[
+{"updated":"2026-11-02","items":[
+{"p":"losos","store":"Lidl","name":"Filet z łososia atlantyckiego ze skórą XXL","price":"4,99 zł/100 g (49,90 zł/kg)","from":"2026-11-02","to":"2026-11-04","note":"limit 3 kg"},
+{"p":"pstrag","store":"Biedronka","name":"Świeży filet z pstrąga tęczowego łososiowego ze skórą Marinero","price":"4,49 zł/100 g","from":"2026-11-02","to":"2026-11-04","note":"z kartą lub aplikacją Moja Biedronka"},
+{"p":"losos","store":"Biedronka","name":"Filet z łososia atlantyckiego Marinero, porcja rodzinna","price":"5,49 zł/100 g","from":"2026-11-02","to":"2026-11-04","note":"z kartą lub aplikacją Moja Biedronka"},
+{"p":"krew","store":"Biedronka","name":"Krewetki gotowane Marinero 250 g","price":"15,99 zł/szt.","from":"2026-11-02","to":"2026-11-04","note":"z kartą Moja Biedronka, przy zakupie 2 szt."},
+{"p":"krew","store":"Biedronka","name":"Krewetki obrane Marinero 200 g","price":"19,99 zł/szt.","from":"2026-11-02","to":"2026-11-04","note":""},
+{"p":"dorsz","store":"Biedronka","name":"Polędwice z dorsza Marinero 330 g","price":"19,99 zł/szt.","from":"2026-11-02","to":"2026-11-07","note":"przy zakupie 2 szt."},
+{"p":"dorsz","store":"Biedronka","name":"Filety z dorsza atlantyckiego bez skóry Marinero 475 g","price":"39,99 zł/szt.","from":"2026-11-02","to":"2026-11-07","note":"przy zakupie 2 szt."},
 {"p":"kurczak","store":"Biedronka","name":"Świeży filet z piersi kurczaka Kraina Mięs, Mega Paka 1 kg","price":"14,99 zł","from":"2026-10-29","to":"2026-11-04","note":""},
-{"p":"jaj","store":"Biedronka","name":"Jaja ściółkowe Moja Kurka","price":"drugie opakowanie 40% taniej","from":"2026-10-29","to":"2026-10-31","note":"z kartą lub aplikacją Moja Biedronka"}
+{"p":"kurczak","store":"Biedronka","name":"Kostka z fileta z piersi kurczaka Kraina Mięs 400 g","price":"11,99 zł (zamiast 14,99 zł)","from":"2026-11-02","to":"2026-11-04","note":""},
+{"p":"kurczak","store":"Lidl","name":"Polędwiczki z kurczaka XXL Rzeźnik 1 kg","price":"24,99 zł (zamiast 31,99 zł)","from":"2026-11-02","to":"2026-11-04","note":"część źródeł podaje ważność do 7.11"},
+{"p":"napsoj","store":"Lidl","name":"Napój sojowy Vemondo","price":"3,99 zł/szt.","from":"2026-11-02","to":"2026-11-04","note":""},
+{"p":"maslo","store":"Lidl","name":"Masło ekstra 83% Pilos 200 g","price":"2,49 zł/szt.","from":"2026-11-02","to":"2026-11-02","note":"tylko w poniedziałek; przy zakupie 3 szt. z kuponem Lidl Plus, limit 3 szt."},
+{"p":"maslo","store":"Biedronka","name":"Masło ekstra Mleczna Dolina 200 g","price":"2,99 zł/szt.","from":"2026-11-02","to":"2026-11-07","note":"przy zakupie 3 szt., limit 9 szt. na konto Moja Biedronka"},
+{"p":"batat","store":"Lidl","name":"Bataty 1 kg","price":"8,99 zł/kg (zamiast 11,99 zł)","from":"2026-11-02","to":"2026-11-04","note":"z kuponem Lidl Plus, limit 3 kg"},
+{"p":"papryka","store":"Lidl","name":"Papryka mix 3 kolorów 500 g","price":"5,99 zł (zamiast 11,99 zł)","from":"2026-11-02","to":"2026-11-04","note":"z kuponem Lidl Plus, limit 2 opak."},
+{"p":"pomkok","store":"Lidl","name":"Minipomidory czekoladowe 250 g","price":"1+1 gratis (9,99 zł/szt.)","from":"2026-11-02","to":"2026-11-04","note":"z kuponem Lidl Plus, limit 1 opak. gratis"},
+{"p":"ogorek","store":"Lidl","name":"Ogórki zielone","price":"2,39 zł/szt. przy zakupie 2 szt. (zamiast 3,99 zł)","from":"2026-11-02","to":"2026-11-04","note":"z kuponem Lidl Plus"},
+{"p":"awok","store":"Biedronka","name":"Awokado Hass","price":"1+1 gratis (6,99 zł/szt.)","from":"2026-11-02","to":"2026-11-04","note":""},
+{"p":"mango","store":"Biedronka","name":"Mango, 1 szt.","price":"5,99 zł (zamiast 9,99 zł)","from":"2026-11-02","to":"2026-11-04","note":""},
+{"p":"cebula","store":"Biedronka","name":"Cebula żółta 1 kg","price":"1,99 zł (zamiast 3,99 zł)","from":"2026-11-02","to":"2026-11-04","note":""},
+{"p":"cytryna","store":"Lidl","name":"Cytryny luzem 1 kg","price":"4,99 zł/kg (zamiast 11,99 zł)","from":"2026-11-02","to":"2026-11-04","note":""},
+{"p":"gruszka","store":"Lidl","name":"Gruszki Konferencja luzem 1 kg","price":"4,99 zł/kg (zamiast 7,99 zł)","from":"2026-11-02","to":"2026-11-04","note":""},
+{"p":"gruszka","store":"Biedronka","name":"Gruszki, opak. 1 kg","price":"2,99 zł/opak. (zamiast 6,99 zł)","from":"2026-11-02","to":"2026-11-04","note":"przy zakupie 2 opak."},
+{"p":"ryz","store":"Biedronka","name":"Ryż basmati Plony Natury 4×100 g","price":"3,49 zł/szt.","from":"2026-11-02","to":"2026-11-07","note":"przy zakupie 2 szt."},
+{"p":"kukur","store":"Biedronka","name":"Kukurydza słodka Nasza Spiżarnia 340 g","price":"3,99 zł/szt.","from":"2026-11-02","to":"2026-11-07","note":""}
 ]}
