@@ -1,0 +1,8 @@
+server {
+  listen ${PORT};
+  root /usr/share/nginx/html;
+  location / { try_files $uri $uri/ /index.html; add_header Cache-Control "no-cache"; }
+  location ~* \.(png|js)$ { add_header Cache-Control "public, max-age=86400"; }
+  location = /sw.js { add_header Cache-Control "no-cache"; }
+  location = /promo.json { add_header Cache-Control "no-cache"; }
+}
