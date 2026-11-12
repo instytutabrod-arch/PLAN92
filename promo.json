@@ -1,17 +1,16 @@
-{"updated":"2026-11-09","items":[
-{"p":"losos","store":"Biedronka","name":"Filet z łososia atlantyckiego Marinero","price":"6,99 zł/100 g","from":"2026-11-09","to":"2026-11-10","note":"z kartą lub aplikacją Moja Biedronka"},
-{"p":"kurczak","store":"Biedronka","name":"Świeży filet z piersi kurczaka Kraina Mięs, Mega Paka","price":"14,99 zł/kg (zamiast 24,90 zł)","from":"2026-11-09","to":"2026-11-10","note":"z kartą lub aplikacją Moja Biedronka"},
-{"p":"indyk","store":"Biedronka","name":"Filet z indyka pakowany próżniowo Kraina Mięs","price":"19,99 zł/kg (zamiast 34,49 zł)","from":"2026-11-09","to":"2026-11-10","note":""},
-{"p":"dorsz","store":"Biedronka","name":"Filet z dorsza atlantyckiego z Grenlandii Marinero","price":"7,99 zł/100 g","from":"2026-11-09","to":"2026-11-10","note":""},
-{"p":"pstrag","store":"Biedronka","name":"Świeży filet z pstrąga tęczowego łososiowego ze skórą Marinero","price":"4,59 zł/100 g","from":"2026-11-09","to":"2026-11-10","note":"z kartą lub aplikacją Moja Biedronka"},
+{"updated":"2026-11-12","items":[
+{"p":"kurczak","store":"Biedronka","name":"Filet z piersi kurczaka Kraina Mięs 1 kg","price":"14,99 zł/kg (zamiast 24,90 zł)","from":"2026-11-12","to":"2026-11-14","note":""},
+{"p":"wol","store":"Lidl","name":"Udziec wołowy","price":"54,99 zł/kg","from":"2026-11-12","to":"2026-11-14","note":"limit 3 kg na paragon"},
+{"p":"pstrag","store":"Lidl","name":"Filet z pstrąga tęczowego ze skórą","price":"39,90 zł/kg (zamiast 57,90 zł)","from":"2026-11-12","to":"2026-11-14","note":"wg tanszykoszyk.pl z aplikacją Lidl Plus"},
+{"p":"dorsz","store":"Lidl","name":"Filet z dorsza pacyficznego bez skóry","price":"7,49 zł/100 g (74,90 zł/kg)","from":"2026-11-12","to":"2026-11-14","note":""},
+{"p":"tun","store":"Lidl","name":"Stek z tuńczyka żółtopłetwego Seamor","price":"7,39 zł/100 g","from":"2026-11-12","to":"2026-11-14","note":""},
+{"p":"krew","store":"Lidl","name":"Krewetki całe gotowane z głową Norso 500 g","price":"19,99 zł/opak.","from":"2026-11-12","to":"2026-11-14","note":"przy zakupie 2 opak."},
 {"p":"krew","store":"Biedronka","name":"Krewetki białe surowe w pancerzu lub blanszowane Marinero 450 g","price":"32,99 zł/opak.","from":"2026-11-09","to":"2026-11-14","note":"przy zakupie 2 opak."},
-{"p":"krew","store":"Biedronka","name":"Krewetki białe gotowane Marinero","price":"49,99 zł/kg","from":"2026-11-09","to":"2026-11-10","note":""},
-{"p":"loswed","store":"Biedronka","name":"Łosoś atlantycki wędzony, rolki","price":"6,49 zł/100 g (zamiast 7,99 zł)","from":"2026-11-05","to":"2026-11-10","note":""},
 {"p":"loswed","store":"Biedronka","name":"Łosoś wędzony na gorąco Marinero 125 g","price":"10,99 zł/opak.","from":"2026-11-09","to":"2026-11-14","note":"przy zakupie 2 opak."},
 {"p":"kefir","store":"Biedronka","name":"Kefir Krasnystaw 1 kg","price":"4,99 zł/szt.","from":"2026-11-09","to":"2026-11-14","note":"przy zakupie 2 szt."},
 {"p":"ryz","store":"Biedronka","name":"Ryż – wszystkie rodzaje (m.in. basmati, brązowy, do sushi)","price":"2+1 gratis","from":"2026-11-09","to":"2026-11-14","note":"limit 2 szt. gratis dziennie na konto Moja Biedronka"},
+{"p":"maslo","store":"Lidl","name":"Masło Pilos 82% 200 g","price":"2,49 zł (zamiast 4,99 zł)","from":"2026-11-12","to":"2026-11-14","note":""},
 {"p":"maslo","store":"Biedronka","name":"Masło ekstra Mleczna Dolina 200 g","price":"3,49 zł/szt.","from":"2026-11-09","to":"2026-11-14","note":"przy zakupie 2 szt., limit 8 szt. dziennie na konto Moja Biedronka"},
-{"p":"gruszka","store":"Lidl","name":"Polskie gruszki","price":"3,99 zł/kg (zamiast 6,99 zł)","from":"2026-11-09","to":"2026-11-10","note":""},
-{"p":"cukinia","store":"Lidl","name":"Cukinia","price":"4,99 zł/kg (zamiast 7,99 zł)","from":"2026-11-09","to":"2026-11-10","note":"z aplikacją Lidl Plus"},
-{"p":"dynia","store":"Lidl","name":"Dynia piżmowa","price":"3,99 zł (zamiast 6,99 zł)","from":"2026-11-09","to":"2026-11-10","note":""}
+{"p":"banan","store":"Lidl","name":"Banany luzem","price":"2,99 zł/kg (zamiast 6,99 zł)","from":"2026-11-12","to":"2026-11-14","note":""},
+{"p":"ziemn","store":"Lidl","name":"Polskie ziemniaki jadalne, myte, luzem","price":"1,99 zł/kg (zamiast 3,99 zł)","from":"2026-11-12","to":"2026-11-14","note":""}
 ]}
